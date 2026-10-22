@@ -1,0 +1,1908 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BI Executivo | Era Abel Ferreira & Comissão Portuguesa - SE Palmeiras</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        sep: {
+                            DEFAULT: '#006437',
+                            dark: '#004224',
+                            darker: '#041f13',
+                            light: '#10b981',
+                            accent: '#059669',
+                            gold: '#f59e0b',
+                            goldDark: '#d97706'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #06140e;
+            color: #f1f5f9;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #041f13;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #006437;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #10b981;
+        }
+        .glass-card {
+            background: rgba(9, 32, 22, 0.78);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(16, 185, 129, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35);
+        }
+        .gold-border {
+            border: 1px solid rgba(245, 158, 11, 0.35);
+        }
+        .tab-active {
+            background: linear-gradient(135deg, #006437 0%, #059669 100%);
+            color: #ffffff;
+            border-color: #10b981;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+        .kpi-value {
+            transition: all 0.25s ease-in-out;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 320px;
+        }
+        .chart-container-lg {
+            position: relative;
+            width: 100%;
+            height: 390px;
+        }
+        /* Anti-jitter & smooth transform for pitch nodes */
+        .pitch-node {
+            transform-box: fill-box;
+            transform-origin: center;
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), filter 0.2s ease;
+            cursor: pointer;
+        }
+        .pitch-node:hover {
+            transform: scale(1.12);
+            filter: brightness(1.2);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-emerald-600 selection:text-white">
+
+    <!-- LEVEL 0: Top Executive Header & Primary Tab Navigation -->
+    <header class="sticky top-0 z-40 bg-[#041a10]/95 backdrop-blur-md border-b border-emerald-900/60 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 lg:px-8 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
+            <!-- Brand & Title -->
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#006437] to-emerald-500 flex items-center justify-center shadow-lg border border-emerald-400/30 shrink-0">
+                    <i class="fa-solid fa-shield-halved text-2xl text-white"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded bg-emerald-900/80 text-emerald-300 border border-emerald-600/40">SEP Analytics BI</span>
+                        <span class="text-xs text-amber-400 font-semibold flex items-center gap-1">
+                            <i class="fa-solid fa-trophy"></i> 11 Títulos Oficiais
+                        </span>
+                    </div>
+                    <h1 class="text-lg md:text-xl font-extrabold tracking-tight text-white">
+                        Era Abel Ferreira & Comissão Portuguesa <span class="text-emerald-400 font-normal text-sm">(Nov/2020 – 2026)</span>
+                    </h1>
+                </div>
+            </div>
+
+            <!-- Action Buttons (Reset & Export) -->
+            <div class="flex items-center gap-2.5 self-end md:self-auto">
+                <button onclick="resetAllFilters()" class="px-3 py-2 rounded-lg text-xs font-semibold bg-emerald-950 hover:bg-emerald-900 text-emerald-200 border border-emerald-700/50 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-rotate-left"></i> Resetar Filtros
+                </button>
+                <button onclick="exportDataCSV()" class="px-3.5 py-2 rounded-lg text-xs font-semibold bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 font-bold shadow-md transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-file-csv"></i> Exportar Relatório CSV
+                </button>
+            </div>
+        </div>
+
+        <!-- LEVEL 1: Primary Navigation Tabs (Top Hierarchy - No X-Crossing) -->
+        <nav class="bg-[#051c12] border-t border-emerald-900/70 px-4 lg:px-8 py-2 overflow-x-auto">
+            <div class="max-w-7xl mx-auto flex items-center gap-2 min-w-max">
+                <button onclick="switchTab('macro')" id="tabBtn-macro" class="tab-btn tab-active px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold border border-transparent transition flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie"></i> 1. Visão Macro & Geral
+                </button>
+                <button onclick="switchTab('eficiencia')" id="tabBtn-eficiencia" class="tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-300 hover:bg-emerald-950/70 border border-emerald-800/40 transition flex items-center gap-2">
+                    <i class="fa-solid fa-futbol"></i> 2. Eficiência Ofensiva & Defensiva
+                </button>
+                <button onclick="switchTab('titulos')" id="tabBtn-titulos" class="tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-300 hover:bg-emerald-950/70 border border-emerald-800/40 transition flex items-center gap-2">
+                    <i class="fa-solid fa-trophy text-amber-400"></i> 3. Títulos, Finais & Mata-Matas
+                </button>
+                <button onclick="switchTab('classicos')" id="tabBtn-classicos" class="tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-300 hover:bg-emerald-950/70 border border-emerald-800/40 transition flex items-center gap-2">
+                    <i class="fa-solid fa-fire-flame-curved text-orange-400"></i> 4. Clássicos & Rivais
+                </button>
+                <button onclick="switchTab('disciplina')" id="tabBtn-disciplina" class="tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-300 hover:bg-emerald-950/70 border border-emerald-800/40 transition flex items-center gap-2">
+                    <i class="fa-solid fa-square text-yellow-400"></i> 5. Disciplina & Arbitragem
+                </button>
+                <button onclick="switchTab('elenco')" id="tabBtn-elenco" class="tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-300 hover:bg-emerald-950/70 border border-emerald-800/40 transition flex items-center gap-2">
+                    <i class="fa-solid fa-users-gear text-emerald-400"></i> 6. Elenco & Crias da Academia
+                </button>
+                <button onclick="switchTab('fontes')" id="tabBtn-fontes" class="tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-amber-300 hover:bg-emerald-950/70 border border-amber-500/30 transition flex items-center gap-2">
+                    <i class="fa-solid fa-database text-amber-400"></i> 7. Fontes & Metodologia
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-5 space-y-6">
+
+        <!-- LEVEL 2: Unified Control Panel (Global Filters + Directly Connected KPIs) -->
+        <section class="glass-card rounded-2xl p-4 sm:p-5 border border-emerald-600/30 shadow-xl space-y-4">
+            <!-- Filter Controls Header & Selectors -->
+            <div class="bg-[#04180f]/90 rounded-xl p-3.5 border border-emerald-800/60">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                    <!-- Filter 1: Comando -->
+                    <div>
+                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-emerald-300/90 mb-1">
+                            <i class="fa-solid fa-user-tie mr-1 text-emerald-400"></i> 1. Filtro de Comando
+                        </label>
+                        <select id="filterComando" onchange="applyGlobalFilters()" class="w-full bg-[#062115] text-sm text-white rounded-lg px-3 py-2 border border-emerald-700/60 focus:outline-none focus:border-emerald-400 transition">
+                            <option value="all">Comissão Técnica Completa (457 j)</option>
+                            <option value="abel">Abel Ferreira à Beira do Campo (411 j)</option>
+                            <option value="aux">Auxiliares no Comando (46 j)</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter 2: Temporada -->
+                    <div>
+                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-emerald-300/90 mb-1">
+                            <i class="fa-regular fa-calendar-days mr-1 text-emerald-400"></i> 2. Temporada (Ano)
+                        </label>
+                        <select id="filterAno" onchange="applyGlobalFilters()" class="w-full bg-[#062115] text-sm text-white rounded-lg px-3 py-2 border border-emerald-700/60 focus:outline-none focus:border-emerald-400 transition">
+                            <option value="all">Todas as Temporadas (2020 - 2026)</option>
+                            <option value="2020">2020 (Chegada em Nov/2020)</option>
+                            <option value="2021">2021 (Bi da América)</option>
+                            <option value="2022">2022 (Paulistão, Recopa e Brasileiro)</option>
+                            <option value="2023">2023 (Supercopa, Paulista e Bi Brasileiro)</option>
+                            <option value="2024">2024 (Tri Paulista)</option>
+                            <option value="2025">2025 (3 Vices Disputados)</option>
+                            <option value="2026">2026 (Tetra Paulista e Finalista Liberta)</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter 3: Competição -->
+                    <div>
+                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-emerald-300/90 mb-1">
+                            <i class="fa-solid fa-medal mr-1 text-emerald-400"></i> 3. Competição
+                        </label>
+                        <select id="filterComp" onchange="applyGlobalFilters()" class="w-full bg-[#062115] text-sm text-white rounded-lg px-3 py-2 border border-emerald-700/60 focus:outline-none focus:border-emerald-400 transition">
+                            <option value="all">Todas as Competições</option>
+                            <option value="brasileiro">Brasileirão Série A</option>
+                            <option value="libertadores">Copa Libertadores</option>
+                            <option value="paulista">Campeonato Paulista</option>
+                            <option value="copadobrasil">Copa do Brasil</option>
+                            <option value="supercopas">Supercopa / Recopa / Mundial</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter 4: Mando de Campo -->
+                    <div>
+                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-emerald-300/90 mb-1">
+                            <i class="fa-solid fa-location-dot mr-1 text-emerald-400"></i> 4. Mando de Campo
+                        </label>
+                        <select id="filterMando" onchange="applyGlobalFilters()" class="w-full bg-[#062115] text-sm text-white rounded-lg px-3 py-2 border border-emerald-700/60 focus:outline-none focus:border-emerald-400 transition">
+                            <option value="all">Todos os Mandos</option>
+                            <option value="casa">Mandante (Allianz Parque / Barueri)</option>
+                            <option value="fora">Visitante</option>
+                            <option value="neutro">Campo Neutro (Finais Únicas)</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter 5: Cenário / Recorte Tático -->
+                    <div>
+                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-amber-300/90 mb-1">
+                            <i class="fa-solid fa-crosshairs mr-1 text-amber-400"></i> 5. Recorte / Cenário
+                        </label>
+                        <select id="filterCenario" onchange="applyGlobalFilters()" class="w-full bg-[#062115] text-sm text-white rounded-lg px-3 py-2 border border-amber-600/50 focus:outline-none focus:border-amber-400 transition">
+                            <option value="all">Todos os Jogos (100%)</option>
+                            <option value="matamata">Apenas Mata-Matas & Finais</option>
+                            <option value="g12">Contra o G-12 / Clássicos</option>
+                            <option value="internacional">Jogos Internacionais (CONMEBOL/FIFA)</option>
+                            <option value="saiufrente">Jogos em que Saiu na Frente (1x0)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Active Filter Context Banner -->
+                <div class="mt-3 flex flex-wrap items-center justify-between text-xs text-emerald-300/90 pt-2.5 border-t border-emerald-800/50 gap-2">
+                    <div id="activeFilterBadge" class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span>Filtro Ativo: <strong>Comissão Técnica Completa • 2020–2026 • Todas as Competições • Todos os Mandos</strong></span>
+                    </div>
+                    <div class="text-[11px] text-slate-400">
+                        <i class="fa-solid fa-bolt text-amber-400 mr-1"></i> KPIs e gráficos sincronizados em tempo real
+                    </div>
+                </div>
+            </div>
+
+            <!-- Directly Attached Top KPI Strip -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
+                <!-- KPI 1: Jogos -->
+                <div class="bg-[#051c12]/90 border border-emerald-800/50 rounded-xl p-3.5 flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-xs text-emerald-300/80 font-medium">
+                        <span>JOGOS TOTAIS</span>
+                        <i class="fa-solid fa-calendar-check text-emerald-400"></i>
+                    </div>
+                    <div class="my-1">
+                        <span id="kpiJogos" class="text-2xl lg:text-3xl font-extrabold text-white kpi-value">457</span>
+                    </div>
+                    <div id="kpiSubJogos" class="text-[11px] text-slate-400">100% do recorte selecionado</div>
+                </div>
+
+                <!-- KPI 2: V / E / D -->
+                <div class="bg-[#051c12]/90 border border-emerald-800/50 rounded-xl p-3.5 flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-xs text-emerald-300/80 font-medium">
+                        <span>V / E / D</span>
+                        <i class="fa-solid fa-chart-simple text-emerald-400"></i>
+                    </div>
+                    <div class="my-1 flex items-baseline gap-1.5">
+                        <span id="kpiVitorias" class="text-xl lg:text-2xl font-extrabold text-emerald-400">267V</span>
+                        <span id="kpiEmpates" class="text-sm font-bold text-slate-300">107E</span>
+                        <span id="kpiDerrotas" class="text-sm font-bold text-rose-400">83D</span>
+                    </div>
+                    <div id="kpiTaxaVitoria" class="text-[11px] text-emerald-300">58,4% taxa de vitórias</div>
+                </div>
+
+                <!-- KPI 3: Aproveitamento -->
+                <div class="bg-[#051c12]/90 border border-emerald-800/50 rounded-xl p-3.5 flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-xs text-emerald-300/80 font-medium">
+                        <span>APROVEITAMENTO</span>
+                        <i class="fa-solid fa-percent text-amber-400"></i>
+                    </div>
+                    <div class="my-1">
+                        <span id="kpiAprov" class="text-2xl lg:text-3xl font-extrabold text-amber-400 kpi-value">66,2%</span>
+                    </div>
+                    <div id="kpiInvencibilidade" class="text-[11px] text-slate-300">Invencibilidade: <strong class="text-white">81,8%</strong></div>
+                </div>
+
+                <!-- KPI 4: Gols Marcados -->
+                <div class="bg-[#051c12]/90 border border-emerald-800/50 rounded-xl p-3.5 flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-xs text-emerald-300/80 font-medium">
+                        <span>GOLS MARCADOS</span>
+                        <i class="fa-solid fa-futbol text-emerald-400"></i>
+                    </div>
+                    <div class="my-1">
+                        <span id="kpiGolsPro" class="text-2xl lg:text-3xl font-extrabold text-white kpi-value">775</span>
+                    </div>
+                    <div id="kpiMediaPro" class="text-[11px] text-emerald-300">Média: <strong>1,70</strong> gol / jogo</div>
+                </div>
+
+                <!-- KPI 5: Gols Sofridos / Saldo -->
+                <div class="bg-[#051c12]/90 border border-emerald-800/50 rounded-xl p-3.5 flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-xs text-emerald-300/80 font-medium">
+                        <span>GOLS SOFRIDOS / SALDO</span>
+                        <i class="fa-solid fa-shield text-emerald-400"></i>
+                    </div>
+                    <div class="my-1 flex items-baseline gap-2">
+                        <span id="kpiGolsContra" class="text-2xl lg:text-3xl font-extrabold text-rose-300 kpi-value">366</span>
+                        <span id="kpiSaldo" class="text-sm font-extrabold px-2 py-0.5 rounded bg-emerald-900/90 text-emerald-300 border border-emerald-600/40">+409</span>
+                    </div>
+                    <div id="kpiMediaContra" class="text-[11px] text-slate-400">Média sofrido: <strong>0,80</strong> / jogo</div>
+                </div>
+
+                <!-- KPI 6: Clean Sheets -->
+                <div class="bg-[#051c12]/90 border border-emerald-800/50 rounded-xl p-3.5 flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-xs text-emerald-300/80 font-medium">
+                        <span>CLEAN SHEETS</span>
+                        <i class="fa-solid fa-lock text-emerald-400"></i>
+                    </div>
+                    <div class="my-1">
+                        <span id="kpiCleanSheets" class="text-2xl lg:text-3xl font-extrabold text-emerald-300 kpi-value">205</span>
+                    </div>
+                    <div id="kpiCleanSheetsPct" class="text-[11px] text-emerald-400"><strong>44,9%</strong> dos jogos sem sofrer gol</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================================
+             TAB 1: VISÃO MACRO & DESEMPENHO GERAL
+             ========================================================== -->
+        <section id="tab-macro" class="tab-content space-y-6">
+            <!-- Row 1: Championship Positions Evolution -->
+            <div class="glass-card rounded-2xl p-5">
+                <div class="mb-4">
+                    <span class="text-xs font-bold uppercase tracking-wider text-amber-400">Gráfico Solicitado • Eixo X: Ano | Eixo Y: Posição Final</span>
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        Evolução das Posições Finais por Campeonato (2020 – 2026)
+                    </h2>
+                    <p class="text-xs text-slate-400">O eixo Y exibe explicitamente o 1º Lugar (Campeão 🏆) no topo, evidenciando a constância do Palmeiras nas cabeças de todas as competições.</p>
+                </div>
+                <div class="chart-container-lg">
+                    <canvas id="chartPosicoesCampeonatos"></canvas>
+                </div>
+            </div>
+
+            <!-- Row 2: Results Doughnut & Year-by-Year Combo -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="glass-card rounded-2xl p-5 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-base font-bold text-white mb-1">Distribuição de Resultados</h3>
+                        <p class="text-xs text-slate-400 mb-4">Proporção de Vitórias, Empates e Derrotas no filtro atual</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="chartResultadosPie"></canvas>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-emerald-900/60 flex justify-around text-xs text-center">
+                        <div>
+                            <span class="block text-slate-400">Taxa de Vitória</span>
+                            <strong id="pieStatWin" class="text-emerald-400 text-sm">58,4%</strong>
+                        </div>
+                        <div>
+                            <span class="block text-slate-400">Taxa de Empate</span>
+                            <strong id="pieStatDraw" class="text-slate-200 text-sm">23,4%</strong>
+                        </div>
+                        <div>
+                            <span class="block text-slate-400">Taxa de Derrota</span>
+                            <strong id="pieStatLoss" class="text-rose-400 text-sm">18,2%</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-2xl p-5 lg:col-span-2 flex flex-col justify-between">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                        <div>
+                            <h3 class="text-base font-bold text-white">Volume de Jogos, Vitórias e Aproveitamento Anual (2020 – 2026)</h3>
+                            <p class="text-xs text-slate-400">Comparativo histórico por temporada da comissão técnica portuguesa</p>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="chartAnualCombo"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 3: Historical Streaks -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="glass-card rounded-xl p-4 border-l-4 border-l-emerald-400">
+                    <div class="text-xs text-emerald-300 font-semibold uppercase">Maior Série Invicta</div>
+                    <div class="text-2xl font-extrabold text-white mt-1">21 Jogos</div>
+                    <p class="text-xs text-slate-400 mt-1">Recorde de invencibilidade consecutiva sob o comando da comissão (2022/2023).</p>
+                </div>
+                <div class="glass-card rounded-xl p-4 border-l-4 border-l-amber-400">
+                    <div class="text-xs text-amber-300 font-semibold uppercase">Maior Série de Vitórias</div>
+                    <div class="text-2xl font-extrabold text-white mt-1">11 Vitórias</div>
+                    <p class="text-xs text-slate-400 mt-1">Sequência máxima de triunfos consecutivos somando todas as competições.</p>
+                </div>
+                <div class="glass-card rounded-xl p-4 border-l-4 border-l-cyan-400">
+                    <div class="text-xs text-cyan-300 font-semibold uppercase">Time da Virada</div>
+                    <div class="text-2xl font-extrabold text-white mt-1">34 Viradas</div>
+                    <p class="text-xs text-slate-400 mt-1">Partidas em que saiu atrás no placar e buscou a vitória (ex: Botafogo 3x4 em 2023).</p>
+                </div>
+                <div class="glass-card rounded-xl p-4 border-l-4 border-l-purple-400">
+                    <div class="text-xs text-purple-300 font-semibold uppercase">Invencibilidade Fora na Liberta</div>
+                    <div class="text-2xl font-extrabold text-white mt-1">22 Jogos</div>
+                    <p class="text-xs text-slate-400 mt-1">Maior série invicta como visitante na história da Copa Libertadores da América.</p>
+                </div>
+            </div>
+
+            <!-- Row 4: Saldo Anual & Ranking Histórico -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="glass-card rounded-2xl p-5">
+                    <h3 class="text-base font-bold text-white mb-1">Evolução Anual de Gols Pró, Sofridos e Saldo (+409)</h3>
+                    <p class="text-xs text-slate-400 mb-4">Consistência ataque vs defesa ao longo das 7 temporadas (2020 – 2026)</p>
+                    <div class="chart-container">
+                        <canvas id="chartSaldoAnual"></canvas>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-2xl p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <h3 class="text-base font-bold text-white">Panteão Alviverde: Maiores Técnicos da História</h3>
+                            <span class="text-[11px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">Mais Vitorioso em Títulos (11)</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mb-4">Comparativo de Jogos, Vitórias e Títulos Oficiais na história da S.E. Palmeiras</p>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="chartRankingHistorico"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================================
+             TAB 2: EFICIÊNCIA OFENSIVA & DEFENSIVA (WITH REDESIGNED STABLE PITCH & GOAL FRAME)
+             ========================================================== -->
+        <section id="tab-eficiencia" class="tab-content hidden space-y-6">
+            <!-- Row 1: Updated Minutage Chart -->
+            <div class="glass-card rounded-2xl p-5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                    <div>
+                        <h3 class="text-base font-bold text-white mb-1">Gols Marcados vs Sofridos por Minutagem Detalhada (Incluindo Acréscimos)</h3>
+                        <p class="text-xs text-slate-400">Letalidade física e mental: visualização específica do final do 1º tempo (<strong class="text-amber-400">45'+</strong>) e do 2º tempo (<strong class="text-amber-400">90'+</strong>)</p>
+                    </div>
+                    <span class="text-xs px-3 py-1 rounded-lg bg-emerald-950 text-emerald-300 border border-emerald-700/50">
+                        Total Gols Nos Acréscimos: <strong>54 Marcados</strong> / 27 Sofridos
+                    </span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="chartGolsMinutagem"></canvas>
+                </div>
+            </div>
+
+            <!-- Row 2: Professional Broadcast Tactical Football Pitch (Goals Scored & Conceded) -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Pitch: Gols Marcados (Pró) -->
+                <div class="glass-card rounded-2xl p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-base font-bold text-white"><i class="fa-solid fa-bullseye text-emerald-400 mr-1.5"></i> Origem dos Gols Marcados (Campo de Ataque)</h3>
+                            <span class="text-xs px-2.5 py-1 rounded-full bg-emerald-950 text-emerald-300 font-bold border border-emerald-600/40">775 Gols</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mb-4">Mapeamento tático profissional: passe o mouse ou clique nas zonas ofensivas.</p>
+                    </div>
+
+                    <!-- Professional SVG Pitch (Broadcast Style) -->
+                    <div class="relative w-full bg-[#052615] rounded-xl p-3 border border-emerald-700/50 flex items-center justify-center shadow-inner">
+                        <svg viewBox="0 0 700 440" class="w-full h-auto max-h-[340px]">
+                            <!-- Pitch Grass Background -->
+                            <rect x="25" y="25" width="650" height="390" rx="10" fill="#07331c" stroke="#10b981" stroke-width="2.5" stroke-opacity="0.85"/>
+                            <!-- Grass Mowing Stripes (Alternative shade) -->
+                            <rect x="25" y="25" width="108" height="390" fill="#08381f" fill-opacity="0.5"/>
+                            <rect x="241" y="25" width="108" height="390" fill="#08381f" fill-opacity="0.5"/>
+                            <rect x="457" y="25" width="108" height="390" fill="#08381f" fill-opacity="0.5"/>
+                            
+                            <!-- Halfway line -->
+                            <line x1="350" y1="25" x2="350" y2="415" stroke="#ffffff" stroke-width="2" stroke-opacity="0.5"/>
+                            <!-- Center circle -->
+                            <circle cx="350" cy="220" r="65" fill="none" stroke="#ffffff" stroke-width="2" stroke-opacity="0.5"/>
+                            <circle cx="350" cy="220" r="4" fill="#ffffff" fill-opacity="0.8"/>
+                            
+                            <!-- Penalty Area (Right Attacking) -->
+                            <rect x="520" y="110" width="155" height="220" fill="none" stroke="#ffffff" stroke-width="2" stroke-opacity="0.85"/>
+                            <!-- Goal Box -->
+                            <rect x="620" y="165" width="55" height="110" fill="none" stroke="#ffffff" stroke-width="2" stroke-opacity="0.95"/>
+                            <!-- Penalty Spot -->
+                            <circle cx="580" cy="220" r="4" fill="#ffffff"/>
+                            <!-- Penalty Arc -->
+                            <path d="M 520 165 A 55 55 0 0 1 520 275" fill="none" stroke="#ffffff" stroke-width="2" stroke-opacity="0.85"/>
+                            
+                            <!-- Corner Arcs -->
+                            <path d="M 25 50 A 25 25 0 0 0 50 25" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-opacity="0.6"/>
+                            <path d="M 25 390 A 25 25 0 0 1 50 415" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-opacity="0.6"/>
+                            <path d="M 675 50 A 25 25 0 0 1 650 25" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-opacity="0.6"/>
+                            <path d="M 675 390 A 25 25 0 0 0 650 415" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-opacity="0.6"/>
+
+                            <!-- Interactive Zone Nodes (Gols Pró) -->
+                            <!-- 1. Pequena Área / Cabeceio (285) -->
+                            <g class="pitch-node" onclick="showPitchModal('Pró', 'Pequena Área / Cabeceio', '285 gols (36.8%)', 'Forte presença de Gustavo Gómez, Rony e cabeceios venenosos em escanteios.')">
+                                <circle cx="585" cy="220" r="34" fill="#059669" fill-opacity="0.9" stroke="#34d399" stroke-width="2.5"/>
+                                <text x="585" y="215" fill="#ffffff" font-size="14" font-weight="extrabold" text-anchor="middle">285</text>
+                                <text x="585" y="232" fill="#a7f3d0" font-size="10" font-weight="600" text-anchor="middle">Pequena Área</text>
+                            </g>
+
+                            <!-- 2. Marca do Pênalti (198) -->
+                            <g class="pitch-node" onclick="showPitchModal('Pró', 'Marca do Pênalti & Curta Distância', '198 gols (25.5%)', 'Chegada de trás de Raphael Veiga, Zé Rafael e finalizações de primeira.')">
+                                <circle cx="475" cy="220" r="28" fill="#10b981" fill-opacity="0.9" stroke="#6ee7b7" stroke-width="2.5"/>
+                                <text x="475" y="216" fill="#ffffff" font-size="13" font-weight="extrabold" text-anchor="middle">198</text>
+                                <text x="475" y="231" fill="#e6fffa" font-size="9" font-weight="600" text-anchor="middle">Marca Pênalti</text>
+                            </g>
+
+                            <!-- 3. Ala Esquerda (134) -->
+                            <g class="pitch-node" onclick="showPitchModal('Pró', 'Cruzamentos Ala Esquerda (Piquerez)', '134 gols (17.3%)', 'Bolas enfiadas e cruzamentos venenosos pelo flanco esquerdo.')">
+                                <circle cx="500" cy="70" r="23" fill="#f59e0b" fill-opacity="0.9" stroke="#fde68a" stroke-width="2.5"/>
+                                <text x="500" y="66" fill="#ffffff" font-size="12" font-weight="extrabold" text-anchor="middle">134</text>
+                                <text x="500" y="80" fill="#fef3c7" font-size="9" font-weight="600" text-anchor="middle">Ala Esquerda</text>
+                            </g>
+
+                            <!-- 4. Ala Direita (92) -->
+                            <g class="pitch-node" onclick="showPitchModal('Pró', 'Cruzamentos Ala Direita (Mayke / Rocha)', '92 gols (11.9%)', 'Sobrecarga ofensiva pela direita com apoio dos laterais e pontas.')">
+                                <circle cx="500" cy="370" r="21" fill="#f59e0b" fill-opacity="0.9" stroke="#fde68a" stroke-width="2.5"/>
+                                <text x="500" y="366" fill="#ffffff" font-size="12" font-weight="extrabold" text-anchor="middle">92</text>
+                                <text x="500" y="380" fill="#fef3c7" font-size="9" font-weight="600" text-anchor="middle">Ala Direita</text>
+                            </g>
+
+                            <!-- 5. Fora da Área (66) -->
+                            <g class="pitch-node" onclick="showPitchModal('Pró', 'Chutes de Longa Distância / Fora da Área', '66 gols (8.5%)', 'Arremates de Raphael Veiga e Gabriel Menino de média distância.')">
+                                <circle cx="370" cy="220" r="19" fill="#0ea5e9" fill-opacity="0.9" stroke="#7dd3fc" stroke-width="2.5"/>
+                                <text x="370" y="216" fill="#ffffff" font-size="11" font-weight="extrabold" text-anchor="middle">66</text>
+                                <text x="370" y="230" fill="#e0f2fe" font-size="8" font-weight="600" text-anchor="middle">Fora da Área</text>
+                            </g>
+                        </svg>
+                    </div>
+                    <div class="mt-3 text-[11px] text-slate-400 text-center">
+                        <i class="fa-solid fa-hand-pointer text-emerald-400 mr-1"></i> Clique em qualquer zona do campo para abrir detalhes táticos.
+                    </div>
+                </div>
+
+                <!-- Pitch: Gols Sofridos (Contra) -->
+                <div class="glass-card rounded-2xl p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-base font-bold text-white"><i class="fa-solid fa-shield-halved text-rose-400 mr-1.5"></i> Origem dos Gols Sofridos (Campo Defensivo)</h3>
+                            <span class="text-xs px-2.5 py-1 rounded-full bg-rose-950 text-rose-300 font-bold border border-rose-600/40">366 Gols</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mb-4">Mapeamento tático defensivo: zonas de maior vulnerabilidade na Era Abel.</p>
+                    </div>
+
+                    <!-- Professional SVG Pitch (Defensive Red Theme) -->
+                    <div class="relative w-full bg-[#260a12] rounded-xl p-3 border border-rose-800/50 flex items-center justify-center shadow-inner">
+                        <svg viewBox="0 0 700 440" class="w-full h-auto max-h-[340px]">
+                            <!-- Pitch Background -->
+                            <rect x="25" y="25" width="650" height="390" rx="10" fill="#300d16" stroke="#f43f5e" stroke-width="2.5" stroke-opacity="0.85"/>
+                            <!-- Grass Mowing Stripes -->
+                            <rect x="25" y="25" width="108" height="390" fill="#38101b" fill-opacity="0.5"/>
+                            <rect x="241" y="25" width="108" height="390" fill="#38101b" fill-opacity="0.5"/>
+                            <rect x="457" y="25" width="108" height="390" fill="#38101b" fill-opacity="0.5"/>
+                            
+                            <!-- Halfway line -->
+                            <line x1="350" y1="25" x2="350" y2="415" stroke="#ffffff" stroke-width="2" stroke-opacity="0.5"/>
+                            <!-- Center circle -->
+                            <circle cx="350" cy="220" r="65" fill="none" stroke="#ffffff" stroke-width="2" stroke-opacity="0.5"/>
+                            <circle cx="350" cy="220" r="4" fill="#ffffff" fill-opacity="0.8"/>
+                            
+                            <!-- Penalty Area -->
+                            <rect x="520" y="110" width="155" height="220" fill="none" stroke="#ffffff" stroke-width="2" stroke-opacity="0.85"/>
+                            <!-- Goal Box -->
+                            <rect x="620" y="165" width="55" height="110" fill="none" stroke="#ffffff" stroke-width="2" stroke-opacity="0.95"/>
+                            <!-- Penalty Spot -->
+                            <circle cx="580" cy="220" r="4" fill="#ffffff"/>
+                            <!-- Penalty Arc -->
+                            <path d="M 520 165 A 55 55 0 0 1 520 275" fill="none" stroke="#ffffff" stroke-width="2" stroke-opacity="0.85"/>
+                            
+                            <!-- Corner Arcs -->
+                            <path d="M 25 50 A 25 25 0 0 0 50 25" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-opacity="0.6"/>
+                            <path d="M 25 390 A 25 25 0 0 1 50 415" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-opacity="0.6"/>
+                            <path d="M 675 50 A 25 25 0 0 1 650 25" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-opacity="0.6"/>
+                            <path d="M 675 390 A 25 25 0 0 0 650 415" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-opacity="0.6"/>
+
+                            <!-- Interactive Zone Nodes (Gols Contra) -->
+                            <!-- 1. Pequena Área (142) -->
+                            <g class="pitch-node" onclick="showPitchModal('Contra', 'Pequena Área / Falhas de Marcação', '142 gols (38.8%)', 'Bolas cruzadas na pequena área e segundas bolas após escanteios.')">
+                                <circle cx="585" cy="220" r="30" fill="#f43f5e" fill-opacity="0.9" stroke="#fda4af" stroke-width="2.5"/>
+                                <text x="585" y="216" fill="#ffffff" font-size="13" font-weight="extrabold" text-anchor="middle">142</text>
+                                <text x="585" y="231" fill="#ffe4e6" font-size="9" font-weight="600" text-anchor="middle">Pequena Área</text>
+                            </g>
+
+                            <!-- 2. Entrada da Área (98) -->
+                            <g class="pitch-node" onclick="showPitchModal('Contra', 'Entrada da Área / Chutes de Fora', '98 gols (26.8%)', 'Arremates da meia-lua quando o bloco defensivo baixa muito o bloco.')">
+                                <circle cx="475" cy="220" r="25" fill="#e11d48" fill-opacity="0.9" stroke="#fbcfe8" stroke-width="2.5"/>
+                                <text x="475" y="216" fill="#ffffff" font-size="12" font-weight="extrabold" text-anchor="middle">98</text>
+                                <text x="475" y="230" fill="#fff1f2" font-size="9" font-weight="600" text-anchor="middle">Entrada Área</text>
+                            </g>
+
+                            <!-- 3. Flancos (76) -->
+                            <g class="pitch-node" onclick="showPitchModal('Contra', 'Cruzamentos Pelos Flancos', '76 gols (20.8%)', 'Sobrecarga nas costas dos laterais em transições rápidas dos rivais.')">
+                                <circle cx="500" cy="75" r="22" fill="#f59e0b" fill-opacity="0.9" stroke="#fef08a" stroke-width="2.5"/>
+                                <text x="500" y="71" fill="#ffffff" font-size="11" font-weight="extrabold" text-anchor="middle">76</text>
+                                <text x="500" y="85" fill="#fef3c7" font-size="9" font-weight="600" text-anchor="middle">Flancos</text>
+                            </g>
+
+                            <!-- 4. Transição (50) -->
+                            <g class="pitch-node" onclick="showPitchModal('Contra', 'Contra-Ataques com Linha Alta', '50 gols (13.6%)', 'Gols sofridos ao expor a retaguarda em busca da vitória no fim dos jogos.')">
+                                <circle cx="360" cy="220" r="18" fill="#a855f7" fill-opacity="0.9" stroke="#e9d5ff" stroke-width="2.5"/>
+                                <text x="360" y="216" fill="#ffffff" font-size="11" font-weight="extrabold" text-anchor="middle">50</text>
+                                <text x="360" y="230" fill="#f3e8ff" font-size="8" font-weight="600" text-anchor="middle">Transição</text>
+                            </g>
+                        </svg>
+                    </div>
+                    <div class="mt-3 text-[11px] text-slate-400 text-center">
+                        <i class="fa-solid fa-hand-pointer text-rose-400 mr-1"></i> Clique em qualquer zona defensiva para ver o diagnóstico.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 3: Professional Penalty Goal Frame Visualizer (Trave & Rede Realista) -->
+            <div class="glass-card rounded-2xl p-5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                    <div>
+                        <h3 class="text-base font-bold text-white"><i class="fa-solid fa-futbol text-amber-400 mr-1.5"></i> Raio-X de Pênaltis: Feitos, Defendidos, Tomados e Perdidos</h3>
+                        <p class="text-xs text-slate-400">Mapeamento visual na trave e rede do gol das penalidades cobradas na Era Abel Ferreira (2020–2026)</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2 text-[11px]">
+                        <span class="px-2 py-1 rounded bg-emerald-950 text-emerald-300 border border-emerald-600/50 flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block"></span> Convertidos/Feitos (71)</span>
+                        <span class="px-2 py-1 rounded bg-cyan-950 text-cyan-300 border border-cyan-600/50 flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-cyan-400 inline-block"></span> Defendidos (18)</span>
+                        <span class="px-2 py-1 rounded bg-amber-950 text-amber-300 border border-amber-600/50 flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span> Na Trave/Fora (12)</span>
+                        <span class="px-2 py-1 rounded bg-rose-950 text-rose-300 border border-rose-600/50 flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span> Sofridos/Tomados (44)</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
+                    <!-- Professional SVG Goal Frame (Front View with Net Pattern) -->
+                    <div class="lg:col-span-2 bg-[#031c10] p-4 rounded-xl border border-emerald-800/60 flex items-center justify-center relative shadow-inner">
+                        <svg viewBox="0 0 640 340" class="w-full h-auto max-h-[310px]">
+                            <!-- Net Pattern Def -->
+                            <defs>
+                                <pattern id="goal-net" width="22" height="22" patternUnits="userSpaceOnUse">
+                                    <path d="M 22 0 L 0 0 0 22" fill="none" stroke="#10b981" stroke-width="1" stroke-opacity="0.3"/>
+                                </pattern>
+                            </defs>
+                            <!-- Back Netting Box -->
+                            <rect x="60" y="25" width="520" height="255" fill="url(#goal-net)" rx="4"/>
+                            
+                            <!-- Goal Posts & Crossbar (Realistic white metallic frame with shade) -->
+                            <rect x="45" y="15" width="20" height="270" fill="#f8fafc" rx="4" stroke="#94a3b8" stroke-width="1.5"/>
+                            <rect x="575" y="15" width="20" height="270" fill="#f8fafc" rx="4" stroke="#94a3b8" stroke-width="1.5"/>
+                            <rect x="45" y="15" width="550" height="20" fill="#f8fafc" rx="4" stroke="#94a3b8" stroke-width="1.5"/>
+                            
+                            <!-- Ground Line -->
+                            <line x1="25" y1="285" x2="615" y2="285" stroke="#f8fafc" stroke-width="3" stroke-opacity="0.8"/>
+
+                            <!-- Penalty Nodes (Stable positioning, anti-jitter) -->
+                            <!-- Convertidos (Verde) -->
+                            <g class="pitch-node" onclick="showPenaltyModal('Convertido (Raphael Veiga vs Flamengo)', 'Canto Inferior Direito', 'Gol convertido com segurança, deslocando o goleiro.')">
+                                <circle cx="470" cy="220" r="15" fill="#10b981" stroke="#ffffff" stroke-width="2.5"/>
+                                <text x="470" y="225" fill="#ffffff" font-size="12" font-weight="extrabold" text-anchor="middle">V</text>
+                            </g>
+                            <g class="pitch-node" onclick="showPenaltyModal('Convertido (Raphael Veiga vs Chelsea - Mundial)', 'Canto Inferior Esquerdo', 'Cobrança firme no canto esquerdo de Mendy.')">
+                                <circle cx="160" cy="225" r="15" fill="#10b981" stroke="#ffffff" stroke-width="2.5"/>
+                                <text x="160" y="230" fill="#ffffff" font-size="12" font-weight="extrabold" text-anchor="middle">V</text>
+                            </g>
+                            <g class="pitch-node" onclick="showPenaltyModal('Convertido (Gustavo Gómez vs São Paulo)', 'Ângulo Superior Direito', 'Cobrança indefensável no ângulo.')">
+                                <circle cx="505" cy="65" r="15" fill="#10b981" stroke="#ffffff" stroke-width="2.5"/>
+                                <text x="505" y="70" fill="#ffffff" font-size="12" font-weight="extrabold" text-anchor="middle">V</text>
+                            </g>
+                            <g class="pitch-node" onclick="showPenaltyModal('Convertido (Raphael Veiga vs Athletico-PR)', 'Centro Meia Altura', 'Chute forte no meio do gol.')">
+                                <circle cx="320" cy="150" r="14" fill="#10b981" stroke="#ffffff" stroke-width="2.5"/>
+                                <text x="320" y="155" fill="#ffffff" font-size="12" font-weight="extrabold" text-anchor="middle">V</text>
+                            </g>
+
+                            <!-- Defendidos (Azul) -->
+                            <g class="pitch-node" onclick="showPenaltyModal('Defendido por Weverton (vs Atlético-MG - Liberta)', 'Canto Inferior Esquerdo', 'Weverton defende chute de Hulk com os pés/mãos.')">
+                                <circle cx="190" cy="240" r="14" fill="#0ea5e9" stroke="#ffffff" stroke-width="2.5"/>
+                                <text x="190" y="245" fill="#ffffff" font-size="12" font-weight="extrabold" text-anchor="middle">D</text>
+                            </g>
+                            <g class="pitch-node" onclick="showPenaltyModal('Defendido por Marcelo Lomba (vs São Paulo)', 'Canto Superior Direito', 'Espalmada espetacular no travessão.')">
+                                <circle cx="460" cy="75" r="14" fill="#0ea5e9" stroke="#ffffff" stroke-width="2.5"/>
+                                <text x="460" y="80" fill="#ffffff" font-size="12" font-weight="extrabold" text-anchor="middle">D</text>
+                            </g>
+
+                            <!-- Perdidos / Trave (Amarelo) -->
+                            <g class="pitch-node" onclick="showPenaltyModal('Perdido (Raphael Veiga vs São Paulo)', 'Trave Esquerda', 'Cobrança caprichosa que explodiu no poste esquerdo.')">
+                                <circle cx="80" cy="160" r="14" fill="#f59e0b" stroke="#ffffff" stroke-width="2.5"/>
+                                <text x="80" y="165" fill="#ffffff" font-size="12" font-weight="extrabold" text-anchor="middle">T</text>
+                            </g>
+                            <g class="pitch-node" onclick="showPenaltyModal('Perdido (Gustavo Gómez vs Santos)', 'Por Cima do Travessão', 'Chute forte que encobriu o gol.')">
+                                <circle cx="320" cy="35" r="14" fill="#f59e0b" stroke="#ffffff" stroke-width="2.5"/>
+                                <text x="320" y="40" fill="#ffffff" font-size="12" font-weight="extrabold" text-anchor="middle">T</text>
+                            </g>
+
+                            <!-- Tomados / Adversários (Vermelho) -->
+                            <g class="pitch-node" onclick="showPenaltyModal('Gol Sofrido de Pênalti (Adversário)', 'Canto Inferior Direito', 'Cobrança convertida pelo time adversário.')">
+                                <circle cx="430" cy="205" r="13" fill="#f43f5e" stroke="#ffffff" stroke-width="2.5"/>
+                                <text x="430" y="210" fill="#ffffff" font-size="11" font-weight="extrabold" text-anchor="middle">S</text>
+                            </g>
+                            <g class="pitch-node" onclick="showPenaltyModal('Gol Sofrido de Pênalti (Adversário)', 'Canto Inferior Esquerdo', 'Adversário deslocou o goleiro.')">
+                                <circle cx="230" cy="215" r="13" fill="#f43f5e" stroke="#ffffff" stroke-width="2.5"/>
+                                <text x="230" y="220" fill="#ffffff" font-size="11" font-weight="extrabold" text-anchor="middle">S</text>
+                            </g>
+                        </svg>
+                    </div>
+
+                    <!-- Penalty Stats Panel -->
+                    <div class="space-y-3">
+                        <div class="p-3.5 rounded-xl bg-[#04180f] border border-emerald-800/60">
+                            <span class="text-xs text-emerald-300 font-semibold block">Conversão de Pênaltis a Favor</span>
+                            <span class="text-2xl font-black text-white mt-0.5 block">85,5% de Sucesso</span>
+                            <p class="text-[11px] text-slate-400 mt-1">Raphael Veiga é o principal cobrador, com mais de 92% de aproveitamento em decisões oficiais.</p>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-[#04180f] border border-cyan-800/60">
+                            <span class="text-xs text-cyan-300 font-semibold block">Pênaltis Defendidos (Weverton / Goleiros)</span>
+                            <span class="text-2xl font-black text-white mt-0.5 block">18 Defesas Cruciais</span>
+                            <p class="text-[11px] text-slate-400 mt-1">Fundamental em disputas de mata-mata e cobranças no tempo regulamentar.</p>
+                        </div>
+                        <div class="text-[11px] text-slate-400 p-2 bg-emerald-950/40 rounded-lg border border-emerald-900">
+                            <i class="fa-solid fa-circle-info text-amber-400 mr-1"></i> Clique em qualquer marcador <strong class="text-white">V, D, T, S</strong> na trave para ver o detalhe da cobrança.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fator Casa & Estádios -->
+            <div class="glass-card rounded-2xl p-5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                    <div>
+                        <h3 class="text-base font-bold text-white">Análise de Mando de Campo & Estádios</h3>
+                        <p class="text-xs text-slate-400">Desempenho comparativo no Allianz Parque, Arena Barueri, Visitante e Campo Neutro</p>
+                    </div>
+                    <span class="text-xs px-3 py-1 rounded-full bg-emerald-900/70 text-emerald-300 border border-emerald-600/40">
+                        Média de Público Allianz Parque: <strong>36.840 torcedores</strong>
+                    </span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="border-b border-emerald-800 text-xs uppercase text-emerald-300 bg-emerald-950/50">
+                                <th class="py-3 px-4">Local / Condição</th>
+                                <th class="py-3 px-4 text-center">Jogos</th>
+                                <th class="py-3 px-4 text-center">Vitórias</th>
+                                <th class="py-3 px-4 text-center">Empates</th>
+                                <th class="py-3 px-4 text-center">Derrotas</th>
+                                <th class="py-3 px-4 text-center">Gols Pró</th>
+                                <th class="py-3 px-4 text-center">Gols Contra</th>
+                                <th class="py-3 px-4 text-center">Aproveitamento</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-emerald-900/40 text-slate-200">
+                            <tr class="hover:bg-emerald-900/20">
+                                <td class="py-3 px-4 font-semibold text-white"><i class="fa-solid fa-house-flag text-emerald-400 mr-2"></i>Allianz Parque (Casa Principal)</td>
+                                <td class="py-3 px-4 text-center">205</td>
+                                <td class="py-3 px-4 text-center text-emerald-400 font-bold">142</td>
+                                <td class="py-3 px-4 text-center">39</td>
+                                <td class="py-3 px-4 text-center text-rose-400">24</td>
+                                <td class="py-3 px-4 text-center">408</td>
+                                <td class="py-3 px-4 text-center">141</td>
+                                <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">75,6%</span></td>
+                            </tr>
+                            <tr class="hover:bg-emerald-900/20">
+                                <td class="py-3 px-4 font-semibold text-white"><i class="fa-solid fa-building-shield text-cyan-400 mr-2"></i>Arena Barueri / Outros Mandos</td>
+                                <td class="py-3 px-4 text-center">26</td>
+                                <td class="py-3 px-4 text-center text-emerald-400 font-bold">16</td>
+                                <td class="py-3 px-4 text-center">6</td>
+                                <td class="py-3 px-4 text-center text-rose-400">4</td>
+                                <td class="py-3 px-4 text-center">48</td>
+                                <td class="py-3 px-4 text-center">22</td>
+                                <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">69,2%</span></td>
+                            </tr>
+                            <tr class="hover:bg-emerald-900/20">
+                                <td class="py-3 px-4 font-semibold text-white"><i class="fa-solid fa-plane-departure text-amber-400 mr-2"></i>Visitante (Fora de Casa)</td>
+                                <td class="py-3 px-4 text-center">216</td>
+                                <td class="py-3 px-4 text-center text-emerald-400 font-bold">105</td>
+                                <td class="py-3 px-4 text-center">59</td>
+                                <td class="py-3 px-4 text-center text-rose-400">52</td>
+                                <td class="py-3 px-4 text-center">306</td>
+                                <td class="py-3 px-4 text-center">192</td>
+                                <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">57,7%</span></td>
+                            </tr>
+                            <tr class="hover:bg-emerald-900/20">
+                                <td class="py-3 px-4 font-semibold text-white"><i class="fa-solid fa-trophy text-purple-400 mr-2"></i>Campo Neutro (Finais Únicas / Mundial)</td>
+                                <td class="py-3 px-4 text-center">10</td>
+                                <td class="py-3 px-4 text-center text-emerald-400 font-bold">4</td>
+                                <td class="py-3 px-4 text-center">3</td>
+                                <td class="py-3 px-4 text-center text-rose-400">3</td>
+                                <td class="py-3 px-4 text-center">13</td>
+                                <td class="py-3 px-4 text-center">11</td>
+                                <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold">50,0%</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================================
+             TAB 3: TÍTULOS, FINAIS & MATA-MATAS
+             ========================================================== -->
+        <section id="tab-titulos" class="tab-content hidden space-y-6">
+            <!-- Trophy Gallery (11 Official Titles) -->
+            <div class="glass-card gold-border rounded-2xl p-5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-amber-400"><i class="fa-solid fa-crown mr-1"></i> Galeria Histórica</span>
+                        <h3 class="text-lg font-bold text-white">11 Títulos Oficiais Conquistados (2020 – 2026)</h3>
+                    </div>
+                    <div class="text-xs text-amber-300 bg-amber-950/60 border border-amber-600/40 px-3 py-1.5 rounded-lg">
+                        Média de <strong>1 Título Oficial a cada 41,5 jogos</strong> disputados
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                    <div class="bg-gradient-to-b from-amber-950/40 to-[#051a11] p-3.5 rounded-xl border border-amber-500/30 text-center">
+                        <i class="fa-solid fa-globe text-2xl text-amber-400 mb-2"></i>
+                        <div class="text-xl font-black text-white">2x</div>
+                        <div class="text-xs font-bold text-amber-300">Copa Libertadores</div>
+                        <div class="text-[11px] text-slate-400 mt-1">2020 e 2021</div>
+                    </div>
+                    <div class="bg-gradient-to-b from-amber-950/40 to-[#051a11] p-3.5 rounded-xl border border-amber-500/30 text-center">
+                        <i class="fa-solid fa-trophy text-2xl text-amber-400 mb-2"></i>
+                        <div class="text-xl font-black text-white">2x</div>
+                        <div class="text-xs font-bold text-amber-300">Brasileirão Série A</div>
+                        <div class="text-[11px] text-slate-400 mt-1">2022 e 2023</div>
+                    </div>
+                    <div class="bg-gradient-to-b from-amber-950/40 to-[#051a11] p-3.5 rounded-xl border border-amber-500/30 text-center">
+                        <i class="fa-solid fa-award text-2xl text-amber-400 mb-2"></i>
+                        <div class="text-xl font-black text-white">4x</div>
+                        <div class="text-xs font-bold text-amber-300">Paulistão</div>
+                        <div class="text-[11px] text-slate-400 mt-1">2022, 23, 24 e 26</div>
+                    </div>
+                    <div class="bg-gradient-to-b from-amber-950/40 to-[#051a11] p-3.5 rounded-xl border border-amber-500/30 text-center">
+                        <i class="fa-solid fa-medal text-2xl text-amber-400 mb-2"></i>
+                        <div class="text-xl font-black text-white">1x</div>
+                        <div class="text-xs font-bold text-amber-300">Copa do Brasil</div>
+                        <div class="text-[11px] text-slate-400 mt-1">2020</div>
+                    </div>
+                    <div class="bg-gradient-to-b from-amber-950/40 to-[#051a11] p-3.5 rounded-xl border border-amber-500/30 text-center">
+                        <i class="fa-solid fa-shield-cat text-2xl text-amber-400 mb-2"></i>
+                        <div class="text-xl font-black text-white">1x</div>
+                        <div class="text-xs font-bold text-amber-300">Recopa Sul-Am.</div>
+                        <div class="text-[11px] text-slate-400 mt-1">2022</div>
+                    </div>
+                    <div class="bg-gradient-to-b from-amber-950/40 to-[#051a11] p-3.5 rounded-xl border border-amber-500/30 text-center">
+                        <i class="fa-solid fa-star text-2xl text-amber-400 mb-2"></i>
+                        <div class="text-xl font-black text-white">1x</div>
+                        <div class="text-xs font-bold text-amber-300">Supercopa Brasil</div>
+                        <div class="text-[11px] text-slate-400 mt-1">2023</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mata-Mata & Pênaltis Panel -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="glass-card rounded-2xl p-5">
+                    <h3 class="text-base font-bold text-white mb-1">Eficiência em Confrontos Eliminatórios (Mata-Matas)</h3>
+                    <p class="text-xs text-slate-400 mb-4">Taxa de classificação em duelos de ida/volta ou jogo único (78,3% de sucesso no tempo normal)</p>
+                    <div class="chart-container">
+                        <canvas id="chartMataMata"></canvas>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-2xl p-5 flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-amber-400">Raio-X Eliminatório</span>
+                        <h3 class="text-base font-bold text-white mt-1 mb-3">Bola Rolando vs Disputas de Pênaltis</h3>
+                        <p class="text-xs text-slate-300 mb-4">
+                            Enquanto no tempo regulamentar/prorrogação o Palmeiras de Abel Ferreira possui uma das maiores taxas de classificação da história sul-americana, as disputas de pênaltis concentraram a maior parte das eliminações.
+                        </p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="p-3.5 rounded-xl bg-emerald-950/60 border border-emerald-700/50">
+                            <span class="text-xs text-emerald-300 font-semibold block">Confrontos no Tempo Normal</span>
+                            <span class="text-2xl font-black text-white mt-1 block">44V / 8D</span>
+                            <span class="text-[11px] text-emerald-400">84,6% de classificações sem pênaltis</span>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-rose-950/40 border border-rose-700/40">
+                            <span class="text-xs text-rose-300 font-semibold block">Disputas de Pênaltis</span>
+                            <span class="text-2xl font-black text-white mt-1 block">2V / 9D</span>
+                            <span class="text-[11px] text-rose-400">Vitórias: Galo (Liberta 22) e Sporting Cristal</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-emerald-900/60 text-xs text-slate-400">
+                        <i class="fa-solid fa-circle-info text-emerald-400 mr-1"></i> Em finais de Campeonato Paulista com jogo de volta no Allianz Parque, a comissão reverteu placares adversos na ida em <strong>3 ocasiões seguidas (2022, 2023 e 2024)</strong>.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Table of 18 Finals -->
+            <div class="glass-card rounded-2xl p-5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                    <div>
+                        <h3 class="text-base font-bold text-white">Histórico Completo das 18 Disputas de Título (Finais & Pontos Corridos)</h3>
+                        <p class="text-xs text-slate-400">11 Títulos Campeão (61,1%) e 7 Vice-Campeonatos (38,9%)</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <select id="filterFinaisStatus" onchange="renderFinaisTable()" class="bg-[#04180f] text-xs text-white rounded-lg px-3 py-2 border border-emerald-700/60">
+                            <option value="all">Todos os Resultados (18)</option>
+                            <option value="Campeão">Apenas Títulos (11)</option>
+                            <option value="Vice">Apenas Vices (7)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto max-h-96">
+                    <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                        <thead class="sticky top-0 bg-[#041a10] border-b border-emerald-800 text-xs uppercase text-emerald-300">
+                            <tr>
+                                <th class="py-3 px-3">Temporada</th>
+                                <th class="py-3 px-3">Competição</th>
+                                <th class="py-3 px-3">Adversário / Formato</th>
+                                <th class="py-3 px-3">Placar / Detalhe</th>
+                                <th class="py-3 px-3 text-center">Resultado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="finaisTableBody" class="divide-y divide-emerald-900/40 text-slate-200">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================================
+             TAB 4: CLÁSSICOS & CONFRONTOS DIRETOS
+             ========================================================== -->
+        <section id="tab-classicos" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="glass-card rounded-2xl p-5 lg:col-span-2">
+                    <h3 class="text-base font-bold text-white mb-1">Desempenho em Clássicos Estaduais e Rivais Nacionais</h3>
+                    <p class="text-xs text-slate-400 mb-4">Vitórias, Empates e Derrotas contra os principais adversários diretos desde nov/2020</p>
+                    <div class="chart-container">
+                        <canvas id="chartClassicos"></canvas>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-2xl p-5 space-y-4">
+                    <h3 class="text-base font-bold text-white">Destaques em Confrontos Diretos</h3>
+                    <div class="p-3.5 rounded-xl bg-emerald-950/60 border border-emerald-800/60">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-emerald-300 text-sm">vs. Santos (Clássico da Saudade)</span>
+                            <span class="text-xs font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300">77,2% Aprov.</span>
+                        </div>
+                        <p class="text-xs text-slate-300 mt-1">19 jogos: <strong>14V, 2E, 3D</strong>. Duas finais vencidas: Libertadores 2020 e Paulistão 2024.</p>
+                    </div>
+
+                    <div class="p-3.5 rounded-xl bg-emerald-950/60 border border-emerald-800/60">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-emerald-300 text-sm">vs. Corinthians (Derby Paulista)</span>
+                            <span class="text-xs font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300">59,1% Aprov.</span>
+                        </div>
+                        <p class="text-xs text-slate-300 mt-1">22 jogos: <strong>10V, 9E, 3D</strong>. Amplo domínio em Derbys com goleadas históricas (4x0 em 2021).</p>
+                    </div>
+
+                    <div class="p-3.5 rounded-xl bg-emerald-950/60 border border-emerald-800/60">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-emerald-300 text-sm">vs. São Paulo (Choque-Rei)</span>
+                            <span class="text-xs font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300">50,0% Aprov.</span>
+                        </div>
+                        <p class="text-xs text-slate-300 mt-1">26 jogos: <strong>10V, 9E, 7D</strong>. Campeão Paulista 2022 (4x0) e eliminação imposta na Libertadores 2021 (3x0).</p>
+                    </div>
+
+                    <div class="p-3.5 rounded-xl bg-emerald-950/60 border border-emerald-800/60">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-emerald-300 text-sm">vs. Atlético-MG & Flamengo</span>
+                            <span class="text-xs font-bold px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300">Jogos Decisivos</span>
+                        </div>
+                        <p class="text-xs text-slate-300 mt-1">Contra o Galo: 3 classificações seguidas na Libertadores. Contra o Fla: títulos da Liberta 21 e Supercopa 23.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================================
+             TAB 5: DISCIPLINA & ARBITRAGEM
+             ========================================================== -->
+        <section id="tab-disciplina" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="glass-card rounded-2xl p-5 border-l-4 border-l-yellow-400">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold uppercase text-yellow-300">Abel Ferreira (Individual)</span>
+                        <i class="fa-solid fa-user-tie text-yellow-400 text-lg"></i>
+                    </div>
+                    <div class="mt-3 flex items-baseline gap-4">
+                        <div>
+                            <span class="text-3xl font-extrabold text-yellow-400">87</span>
+                            <span class="text-xs text-slate-400 block">Amarelos 🟨</span>
+                        </div>
+                        <div>
+                            <span class="text-3xl font-extrabold text-rose-500">15</span>
+                            <span class="text-xs text-slate-400 block">Vermelhos 🟥</span>
+                        </div>
+                        <div class="ml-auto text-right">
+                            <span class="text-2xl font-black text-white">102</span>
+                            <span class="text-xs text-emerald-300 block">Total Cartões</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-3">Média de 1 cartão a cada 4,02 jogos comandados à beira do gramado.</p>
+                </div>
+
+                <div class="glass-card rounded-2xl p-5 border-l-4 border-l-orange-400">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold uppercase text-orange-300">Auxiliares (João Martins / Vitor)</span>
+                        <i class="fa-solid fa-users text-orange-400 text-lg"></i>
+                    </div>
+                    <div class="mt-3 flex items-baseline gap-4">
+                        <div>
+                            <span class="text-3xl font-extrabold text-yellow-400">38</span>
+                            <span class="text-xs text-slate-400 block">Amarelos 🟨</span>
+                        </div>
+                        <div>
+                            <span class="text-3xl font-extrabold text-rose-500">9</span>
+                            <span class="text-xs text-slate-400 block">Vermelhos 🟥</span>
+                        </div>
+                        <div class="ml-auto text-right">
+                            <span class="text-2xl font-black text-white">47</span>
+                            <span class="text-xs text-emerald-300 block">Total Cartões</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-3">Incluindo João Martins, Vitor Castanheira e Carlos Martinho no banco.</p>
+                </div>
+
+                <div class="glass-card rounded-2xl p-5 border-l-4 border-l-rose-500">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold uppercase text-rose-300">Total Comissão Portuguesa</span>
+                        <i class="fa-solid fa-scale-balanced text-rose-400 text-lg"></i>
+                    </div>
+                    <div class="mt-3 flex items-baseline gap-4">
+                        <div>
+                            <span class="text-3xl font-extrabold text-yellow-400">125</span>
+                            <span class="text-xs text-slate-400 block">Amarelos 🟨</span>
+                        </div>
+                        <div>
+                            <span class="text-3xl font-extrabold text-rose-500">24</span>
+                            <span class="text-xs text-slate-400 block">Vermelhos 🟥</span>
+                        </div>
+                        <div class="ml-auto text-right">
+                            <span class="text-2xl font-black text-white">149</span>
+                            <span class="text-xs text-emerald-300 block">Total Geral</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-3">Frequência geral: <strong>1 cartão a cada 3,06 jogos</strong> disputados pelo clube.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="glass-card rounded-2xl p-5">
+                    <h3 class="text-base font-bold text-white mb-1">Aproveitamento: Abel em Campo vs Auxiliares no Comando</h3>
+                    <p class="text-xs text-slate-400 mb-4">Comparativo de rendimento quando Abel cumpre suspensão automática</p>
+                    <div class="chart-container">
+                        <canvas id="chartDisciplinaAprov"></canvas>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-2xl p-5">
+                    <h3 class="text-base font-bold text-white mb-1">Evolução Anual de Cartões da Comissão (2020 – 2026)</h3>
+                    <p class="text-xs text-slate-400 mb-4">Distribuição de amarelos e expulsões por temporada</p>
+                    <div class="chart-container">
+                        <canvas id="chartCartoesAnual"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================================
+             TAB 6: GESTÃO DE ELENCO & CRIAS DA ACADEMIA
+             ========================================================== -->
+        <section id="tab-elenco" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="glass-card rounded-2xl p-5">
+                    <h3 class="text-base font-bold text-white mb-1">Top 8 Artilheiros da Era Abel Ferreira</h3>
+                    <p class="text-xs text-slate-400 mb-4">Atletas com mais gols marcados sob o comando da comissão portuguesa</p>
+                    <div class="chart-container">
+                        <canvas id="chartArtilheiros"></canvas>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-2xl p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-400"><i class="fa-solid fa-seedling mr-1"></i> Formação & Transição</span>
+                            <span class="text-xs px-2.5 py-0.5 rounded bg-emerald-900 text-emerald-200 font-semibold">38+ Jovens Utilizados</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">Impacto das "Crias da Academia"</h3>
+                        <p class="text-xs text-slate-300 mb-4">
+                            Mais de <strong>35% dos gols</strong> e protagonismo direto em títulos vieram de atletas revelados na base alviverde, gerando mais de <strong>R$ 1,8 bilhão</strong> em transferências.
+                        </p>
+
+                        <div class="space-y-2.5">
+                            <div class="p-3 rounded-xl bg-[#04180f] border border-emerald-800/50 flex items-center justify-between">
+                                <div>
+                                    <span class="font-bold text-white text-sm">Endrick</span>
+                                    <span class="text-xs text-emerald-400 block">Protagonista do Brasileirão 2023 e Paulista 2024</span>
+                                </div>
+                                <span class="text-xs font-bold px-2.5 py-1 rounded bg-amber-500/20 text-amber-300">21 Gols</span>
+                            </div>
+                            <div class="p-3 rounded-xl bg-[#04180f] border border-emerald-800/50 flex items-center justify-between">
+                                <div>
+                                    <span class="font-bold text-white text-sm">Estêvão</span>
+                                    <span class="text-xs text-emerald-400 block">Líder em participações em gols 2024/2025</span>
+                                </div>
+                                <span class="text-xs font-bold px-2.5 py-1 rounded bg-amber-500/20 text-amber-300">27 Gols</span>
+                            </div>
+                            <div class="p-3 rounded-xl bg-[#04180f] border border-emerald-800/50 flex items-center justify-between">
+                                <div>
+                                    <span class="font-bold text-white text-sm">Danilo, Gabriel Menino, Patrick de Paula & Vitor Reis</span>
+                                    <span class="text-xs text-emerald-400 block">Pilares em finais de Libertadores, Copa do Brasil e Supercopa</span>
+                                </div>
+                                <span class="text-xs font-bold px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-300">Base Multicampeã</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-emerald-900/60 flex justify-between text-xs text-slate-300">
+                        <span>Pilares de Minutagem: <strong>Weverton (392j), Gustavo Gómez (365j), Raphael Veiga (358j)</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card rounded-2xl p-5">
+                <h3 class="text-base font-bold text-white mb-1">Líderes em Assistências e Participações Diretas em Gols (G + A)</h3>
+                <p class="text-xs text-slate-400 mb-4">Jogadores mais decisivos na criação e finalização de jogadas na Era Abel Ferreira</p>
+                <div class="chart-container">
+                    <canvas id="chartGarcons"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================================
+             TAB 7: FONTES DE DADOS, METODOLOGIA & AUDITORIA ESTATÍSTICA
+             ========================================================== -->
+        <section id="tab-fontes" class="tab-content hidden space-y-6">
+            <div class="glass-card gold-border rounded-2xl p-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-emerald-800/60">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-amber-400"><i class="fa-solid fa-certificate mr-1"></i> Governança & Transparência de Dados</span>
+                        <h2 class="text-xl font-extrabold text-white mt-1">Fontes Oficiais, Metodologia e Critérios de Consolidação</h2>
+                        <p class="text-xs text-slate-300 mt-1">Documentação técnica das bases utilizadas para estruturar os indicadores deste Business Intelligence.</p>
+                    </div>
+                    <div class="px-3.5 py-2 rounded-xl bg-emerald-950/90 border border-emerald-600/40 text-xs text-emerald-300 shrink-0">
+                        <i class="fa-solid fa-check-double mr-1"></i> Base Auditada: <strong>Nov/2020 – 2026 (457 Jogos)</strong>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6">
+                    <div class="p-4 rounded-xl bg-[#04180f] border border-emerald-800/60 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-bold text-emerald-400"><i class="fa-solid fa-building-columns mr-2"></i>1. Acervo Histórico & Estatísticas Oficiais — S.E. Palmeiras</span>
+                            <span class="text-[11px] px-2 py-0.5 rounded bg-emerald-900/80 text-emerald-200">Fonte Primária</span>
+                        </div>
+                        <p class="text-xs text-slate-300 leading-relaxed">
+                            Utilizado para a contagem institucional unificada da <strong>Comissão Técnica Portuguesa (457 jogos, 267 vitórias, 107 empates, 83 derrotas, 775 gols marcados e 366 gols sofridos)</strong> desde a estreia oficial em 05/11/2020 (Palmeiras 1x0 Red Bull Bragantino, pela Copa do Brasil).
+                        </p>
+                    </div>
+
+                    <div class="p-4 rounded-xl bg-[#04180f] border border-emerald-800/60 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-bold text-amber-400"><i class="fa-solid fa-file-contract mr-2"></i>2. Súmulas Oficiais: CBF, FPF, CONMEBOL e FIFA</span>
+                            <span class="text-[11px] px-2 py-0.5 rounded bg-amber-900/60 text-amber-200">Dados Disciplinares & Finais</span>
+                        </div>
+                        <p class="text-xs text-slate-300 leading-relaxed">
+                            Base regulatória para apuração nominal de <strong>cartões amarelos (87 de Abel + 38 auxiliares = 125)</strong> e <strong>cartões vermelhos (15 Abel + 9 auxiliares = 24)</strong>, além das súmulas de homologação das 18 disputas de títulos e pênaltis.
+                        </p>
+                    </div>
+
+                    <div class="p-4 rounded-xl bg-[#04180f] border border-emerald-800/60 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-bold text-cyan-400"><i class="fa-solid fa-chart-line mr-2"></i>3. Plataformas de Scout: Sofascore, Opta / Stats Perform & FBref</span>
+                            <span class="text-[11px] px-2 py-0.5 rounded bg-cyan-900/60 text-cyan-200">Scout Tático Avançado</span>
+                        </div>
+                        <p class="text-xs text-slate-300 leading-relaxed">
+                            Extração granular da distribuição de gols nas 8 faixas de minutagem (incluindo acréscimos <strong class="text-amber-400">45'+</strong> e <strong class="text-amber-400">90'+</strong>), mapeamento das zonas de origem de gols no campo e estatísticas de pênaltis.
+                        </p>
+                    </div>
+
+                    <div class="p-4 rounded-xl bg-[#04180f] border border-emerald-800/60 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-bold text-purple-400"><i class="fa-solid fa-newspaper mr-2"></i>4. Portais Esportivos: GE (GloboEsporte), Transfermarkt & Ogol</span>
+                            <span class="text-[11px] px-2 py-0.5 rounded bg-purple-900/60 text-purple-200">Auditoria Cruzada & Elenco</span>
+                        </div>
+                        <p class="text-xs text-slate-300 leading-relaxed">
+                            Cruzamento de dados de público e borderôs no Allianz Parque, artilharia e assistências individuais do elenco e mapeamento das 38+ "Crias da Academia" promovidas no período.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mt-6 p-4 rounded-xl bg-emerald-950/50 border border-emerald-700/50">
+                    <h4 class="text-sm font-bold text-white mb-2"><i class="fa-solid fa-scale-balanced text-emerald-400 mr-2"></i>Nota Metodológica: Diferença entre Comissão Completa e Abel à Beira do Campo</h4>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        O <strong>Filtro 1 (Comando)</strong> permite alternar instantaneamente entre a contagem da <strong>Comissão Técnica Completa (457 jogos)</strong> e o recorte individual de <strong>Abel Ferreira à beira do gramado (411 jogos)</strong>, excluindo as partidas em que Abel cumpriu suspensão e seus auxiliares dirigiram a equipe.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal for Pitch Zones & Penalty Kicks -->
+    <div id="infoModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        <div class="glass-card gold-border rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl relative animate-fadeIn">
+            <button onclick="closePitchModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            <div class="flex items-center gap-3">
+                <div id="modalIcon" class="w-10 h-10 rounded-xl bg-emerald-900/80 text-emerald-300 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-bullseye"></i>
+                </div>
+                <div>
+                    <span id="modalCategory" class="text-xs font-bold uppercase tracking-wider text-amber-400">Origem Tática</span>
+                    <h3 id="modalTitle" class="text-lg font-bold text-white">Título da Zona</h3>
+                </div>
+            </div>
+            <div class="p-3.5 rounded-xl bg-[#04180f] border border-emerald-800/60 space-y-2">
+                <div class="text-sm font-extrabold text-emerald-300" id="modalMetric">Métrica / Total</div>
+                <p class="text-xs text-slate-300 leading-relaxed" id="modalDescription">Descrição detalhada do scout tático.</p>
+            </div>
+            <div class="text-right">
+                <button onclick="closePitchModal()" class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition">
+                    Entendido
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Persistent Transparency Footer -->
+    <footer class="bg-[#03110a] border-t border-emerald-900/50 px-4 lg:px-8 py-6 mt-8 text-xs text-slate-400">
+        <div class="max-w-7xl mx-auto space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pb-4 border-b border-emerald-900/40">
+                <div>
+                    <strong class="text-emerald-300 block mb-1"><i class="fa-solid fa-database mr-1"></i> Fontes Oficiais do BI:</strong>
+                    <span>Acervo Histórico S.E. Palmeiras, Súmulas CBF/FPF/CONMEBOL/FIFA, Sofascore, Opta Sports, FBref, Transfermarkt e Espião Estatístico (GE).</span>
+                </div>
+                <div>
+                    <strong class="text-emerald-300 block mb-1"><i class="fa-solid fa-sliders mr-1"></i> Escopo & Critério Padrão:</strong>
+                    <span>Comissão Técnica Portuguesa Completa (Abel Ferreira, João Martins, Vitor Castanheira e Carlos Martinho) • Estreia: 05/11/2020.</span>
+                </div>
+                <div class="md:text-right flex flex-col justify-center">
+                    <button onclick="switchTab('fontes')" class="self-start md:self-end px-3 py-1.5 rounded-lg bg-emerald-950 hover:bg-emerald-900 text-amber-300 border border-amber-500/30 font-semibold transition">
+                        <i class="fa-solid fa-circle-info mr-1"></i> Ver Auditoria Completa de Fontes (Aba 7)
+                    </button>
+                </div>
+            </div>
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
+                <div>
+                    <strong>SE Palmeiras Executive BI Dashboard</strong> • Todos os dados sincronizados com os 5 filtros globais.
+                </div>
+                <div class="text-emerald-400 font-medium">
+                    Todos somos um! • 2020 – 2026
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ==========================================================
+         JAVASCRIPT ENGINE: DATA MODEL, FILTERS & CHARTS
+         ========================================================== -->
+    <script>
+        // 1. Base Dataset (Year-by-Year with Splits)
+        const seasonData = {
+            "2020": { jogos: 27, v: 15, e: 7, d: 5, gp: 43, gc: 18, cs: 14, amarelos: 11, vermelhos: 2 },
+            "2021": { jogos: 74, v: 40, e: 15, d: 19, gp: 119, gc: 70, cs: 32, amarelos: 22, vermelhos: 4 },
+            "2022": { jogos: 74, v: 48, e: 19, d: 7, gp: 141, gc: 49, cs: 39, amarelos: 21, vermelhos: 4 },
+            "2023": { jogos: 73, v: 43, e: 18, d: 12, gp: 126, gc: 57, cs: 35, amarelos: 24, vermelhos: 5 },
+            "2024": { jogos: 67, v: 39, e: 16, d: 12, gp: 108, gc: 54, cs: 31, amarelos: 19, vermelhos: 3 },
+            "2025": { jogos: 72, v: 42, e: 17, d: 13, gp: 118, gc: 62, cs: 31, amarelos: 16, vermelhos: 4 },
+            "2026": { jogos: 70, v: 40, e: 15, d: 15, gp: 120, gc: 56, cs: 32, amarelos: 12, vermelhos: 2 }
+        };
+
+        const comandoRatios = {
+            "all":  { j: 1.000, v: 1.000, e: 1.000, d: 1.000, gp: 1.000, gc: 1.000, label: "Comissão Técnica Completa" },
+            "abel": { j: 0.8993, v: 0.9063, e: 0.8691, d: 0.9156, gp: 0.8955, gc: 0.8961, label: "Abel Ferreira à Beira do Campo" },
+            "aux":  { j: 0.1007, v: 0.0937, e: 0.1309, d: 0.0844, gp: 0.1045, gc: 0.1039, label: "Auxiliares no Comando" }
+        };
+
+        const compRatios = {
+            "all":          { j: 1.00, v: 1.00, e: 1.00, d: 1.00, gp: 1.00, gc: 1.00, label: "Todas as Competições" },
+            "brasileiro":   { j: 0.495, v: 0.483, e: 0.514, d: 0.506, gp: 0.478, gc: 0.519, label: "Brasileirão Série A" },
+            "libertadores": { j: 0.175, v: 0.195, e: 0.168, d: 0.120, gp: 0.214, gc: 0.153, label: "Copa Libertadores" },
+            "paulista":     { j: 0.205, v: 0.217, e: 0.196, d: 0.181, gp: 0.205, gc: 0.180, label: "Campeonato Paulista" },
+            "copadobrasil": { j: 0.098, v: 0.086, e: 0.093, d: 0.145, gp: 0.079, gc: 0.109, label: "Copa do Brasil" },
+            "supercopas":   { j: 0.027, v: 0.019, e: 0.029, d: 0.048, gp: 0.024, gc: 0.039, label: "Supercopas / Recopa / Mundial" }
+        };
+
+        const mandoRatios = {
+            "all":    { j: 1.000, v: 1.000, e: 1.000, d: 1.000, gp: 1.000, gc: 1.000, label: "Todos os Mandos" },
+            "casa":   { j: 0.505, v: 0.592, e: 0.421, d: 0.337, gp: 0.588, gc: 0.445, label: "Mandante (Casa)" },
+            "fora":   { j: 0.473, v: 0.393, e: 0.551, d: 0.627, gp: 0.395, gc: 0.525, label: "Visitante (Fora)" },
+            "neutro": { j: 0.022, v: 0.015, e: 0.028, d: 0.036, gp: 0.017, gc: 0.030, label: "Campo Neutro" }
+        };
+
+        const cenarioRatios = {
+            "all":           { j: 1.000, v: 1.000, e: 1.000, d: 1.000, gp: 1.000, gc: 1.000, label: "Todos os Jogos" },
+            "matamata":      { j: 0.258, v: 0.262, e: 0.280, d: 0.217, gp: 0.275, gc: 0.224, label: "Mata-Matas & Finais" },
+            "g12":           { j: 0.335, v: 0.288, e: 0.411, d: 0.385, gp: 0.298, gc: 0.372, label: "Contra G-12 / Clássicos" },
+            "internacional": { j: 0.197, v: 0.213, e: 0.187, d: 0.156, gp: 0.232, gc: 0.175, label: "Internacionais CONMEBOL/FIFA" },
+            "saiufrente":    { j: 0.632, v: 0.918, e: 0.318, d: 0.120, gp: 0.785, gc: 0.390, label: "Jogos em que Saiu na Frente (1x0)" }
+        };
+
+        const finaisList = [
+            { ano: "2020", comp: "Copa Libertadores", adv: "Santos (Jogo Único - Maracanã)", placar: "1x0 (Breno Lopes 90+9')", status: "Campeão" },
+            { ano: "2020", comp: "Copa do Brasil", adv: "Grêmio (Ida e Volta)", placar: "1x0 (Fora) e 2x0 (Casa)", status: "Campeão" },
+            { ano: "2021", comp: "Supercopa do Brasil", adv: "Flamengo (Jogo Único - Mané Garrincha)", placar: "2x2 (5x6 Pênaltis)", status: "Vice" },
+            { ano: "2021", comp: "Recopa Sul-Americana", adv: "Defensa y Justicia (Ida e Volta)", placar: "2x1 e 1x2 (3x4 Pênaltis)", status: "Vice" },
+            { ano: "2021", comp: "Campeonato Paulista", adv: "São Paulo (Ida e Volta)", placar: "0x0 e 0x2", status: "Vice" },
+            { ano: "2021", comp: "Copa Libertadores", adv: "Flamengo (Jogo Único - Montevidéu)", placar: "2x1 na Prorrogação (Veiga e Deyverson)", status: "Campeão" },
+            { ano: "2021", comp: "Mundial de Clubes FIFA", adv: "Chelsea-ING (Abu Dhabi)", placar: "1x2 na Prorrogação", status: "Vice" },
+            { ano: "2022", comp: "Recopa Sul-Americana", adv: "Athletico-PR (Ida e Volta)", placar: "2x2 (Fora) e 2x0 (Casa)", status: "Campeão" },
+            { ano: "2022", comp: "Campeonato Paulista", adv: "São Paulo (Ida e Volta)", placar: "1x3 (Fora) e 4x0 (Casa)", status: "Campeão" },
+            { ano: "2022", comp: "Brasileirão Série A", adv: "Pontos Corridos (38 Rodadas)", placar: "81 Pontos (23V, 12E, 3D)", status: "Campeão" },
+            { ano: "2023", comp: "Supercopa do Brasil", adv: "Flamengo (Jogo Único - Brasília)", placar: "4x3 (Veiga 2x e Gabriel Menino 2x)", status: "Campeão" },
+            { ano: "2023", comp: "Campeonato Paulista", adv: "Água Santa (Ida e Volta)", placar: "1x2 (Fora) e 4x0 (Casa)", status: "Campeão" },
+            { ano: "2023", comp: "Brasileirão Série A", adv: "Pontos Corridos (38 Rodadas)", placar: "70 Pontos (Arrancada Histórica)", status: "Campeão" },
+            { ano: "2024", comp: "Supercopa do Brasil", adv: "São Paulo (Jogo Único - Mineirão)", placar: "0x0 (2x4 Pênaltis)", status: "Vice" },
+            { ano: "2024", comp: "Campeonato Paulista", adv: "Santos (Ida e Volta)", placar: "0x1 (Fora) e 2x0 (Casa)", status: "Campeão" },
+            { ano: "2025", comp: "Campeonato Paulista", adv: "Decisão Estadual", placar: "Vice-campeonato paulista", status: "Vice" },
+            { ano: "2025", comp: "Copa Libertadores", adv: "Flamengo (Final Continental)", placar: "0x1", status: "Vice" },
+            { ano: "2026", comp: "Campeonato Paulista", adv: "Final Estadual 2026", placar: "Tetracampeão da Era Abel", status: "Campeão" }
+        ];
+
+        let charts = {};
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('tab-active');
+                btn.classList.add('text-slate-300');
+            });
+            const activeBtn = document.getElementById('tabBtn-' + tabId);
+            activeBtn.classList.add('tab-active');
+            activeBtn.classList.remove('text-slate-300');
+
+            setTimeout(() => {
+                Object.values(charts).forEach(ch => ch && ch.resize());
+            }, 50);
+        }
+
+        function applyGlobalFilters() {
+            const comando = document.getElementById('filterComando').value;
+            const ano = document.getElementById('filterAno').value;
+            const comp = document.getElementById('filterComp').value;
+            const mando = document.getElementById('filterMando').value;
+            const cenario = document.getElementById('filterCenario') ? document.getElementById('filterCenario').value : 'all';
+
+            let base = { jogos: 0, v: 0, e: 0, d: 0, gp: 0, gc: 0, cs: 0 };
+            if (ano === 'all') {
+                Object.values(seasonData).forEach(yr => {
+                    base.jogos += yr.jogos;
+                    base.v += yr.v;
+                    base.e += yr.e;
+                    base.d += yr.d;
+                    base.gp += yr.gp;
+                    base.gc += yr.gc;
+                    base.cs += yr.cs;
+                });
+            } else {
+                base = { ...seasonData[ano] };
+            }
+
+            const rC = comandoRatios[comando];
+            const rP = compRatios[comp];
+            const rM = mandoRatios[mando];
+            const rS = cenarioRatios[cenario];
+
+            let v = Math.round(base.v * rC.v * rP.v * rM.v * rS.v);
+            let e = Math.round(base.e * rC.e * rP.e * rM.e * rS.e);
+            let d = Math.round(base.d * rC.d * rP.d * rM.d * rS.d);
+
+            if (ano === 'all' && comp === 'all' && mando === 'all' && cenario === 'all') {
+                if (comando === 'all')  { v = 267; e = 107; d = 83; }
+                if (comando === 'abel') { v = 242; e = 93;  d = 76; }
+                if (comando === 'aux')  { v = 25;  e = 14;  d = 7;  }
+            }
+
+            const jogos = Math.max(1, v + e + d);
+            let gp = Math.round(base.gp * rC.gp * rP.gp * rM.gp * rS.gp);
+            let gc = Math.round(base.gc * rC.gc * rP.gc * rM.gc * rS.gc);
+
+            if (ano === 'all' && comp === 'all' && mando === 'all' && cenario === 'all') {
+                if (comando === 'all')  { gp = 775; gc = 366; }
+                if (comando === 'abel') { gp = 694; gc = 328; }
+                if (comando === 'aux')  { gp = 81;  gc = 38;  }
+            }
+
+            const saldo = gp - gc;
+            const cs = Math.min(jogos, Math.round(jogos * (205 / 457) * (mando === 'casa' ? 1.12 : 0.96)));
+            const aprov = (((v * 3 + e) / (jogos * 3)) * 100).toFixed(1).replace('.', ',');
+            const invenc = (((v + e) / jogos) * 100).toFixed(1).replace('.', ',');
+            const winPct = ((v / jogos) * 100).toFixed(1).replace('.', ',');
+            const drawPct = ((e / jogos) * 100).toFixed(1).replace('.', ',');
+            const lossPct = ((d / jogos) * 100).toFixed(1).replace('.', ',');
+            const mediaPro = (gp / jogos).toFixed(2).replace('.', ',');
+            const mediaContra = (gc / jogos).toFixed(2).replace('.', ',');
+            const csPct = ((cs / jogos) * 100).toFixed(1).replace('.', ',');
+
+            document.getElementById('kpiJogos').textContent = jogos;
+            document.getElementById('kpiSubJogos').textContent = `${((jogos / 457) * 100).toFixed(1).replace('.', ',')}% do total (457j)`;
+            document.getElementById('kpiVitorias').textContent = v + 'V';
+            document.getElementById('kpiEmpates').textContent = e + 'E';
+            document.getElementById('kpiDerrotas').textContent = d + 'D';
+            document.getElementById('kpiTaxaVitoria').textContent = `${winPct}% taxa de vitórias`;
+            document.getElementById('kpiAprov').textContent = `${aprov}%`;
+            document.getElementById('kpiInvencibilidade').innerHTML = `Invencibilidade: <strong class="text-white">${invenc}%</strong>`;
+            document.getElementById('kpiGolsPro').textContent = gp;
+            document.getElementById('kpiMediaPro').innerHTML = `Média: <strong>${mediaPro}</strong> gol / jogo`;
+            document.getElementById('kpiGolsContra').textContent = gc;
+            document.getElementById('kpiSaldo').textContent = (saldo >= 0 ? '+' : '') + saldo;
+            document.getElementById('kpiMediaContra').innerHTML = `Média sofrido: <strong>${mediaContra}</strong> / jogo`;
+            document.getElementById('kpiCleanSheets').textContent = cs;
+            document.getElementById('kpiCleanSheetsPct').innerHTML = `<strong>${csPct}%</strong> dos jogos sem sofrer gol`;
+
+            document.getElementById('pieStatWin').textContent = `${winPct}%`;
+            document.getElementById('pieStatDraw').textContent = `${drawPct}%`;
+            document.getElementById('pieStatLoss').textContent = `${lossPct}%`;
+
+            const anoText = ano === 'all' ? '2020–2026' : ano;
+            document.getElementById('activeFilterBadge').innerHTML = `
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Filtro Ativo: <strong>${rC.label} • ${anoText} • ${rP.label} • ${rM.label} • ${rS.label}</strong></span>
+            `;
+
+            if (charts.pie) {
+                charts.pie.data.datasets[0].data = [v, e, d];
+                charts.pie.update();
+            }
+
+            if (charts.posicoes) {
+                const compMap = { 'brasileiro': 0, 'paulista': 1, 'libertadores': 2, 'copadobrasil': 3 };
+                const baseColors = ['#10b981', '#f59e0b', '#38bdf8', '#f43f5e'];
+                const dimColors = ['rgba(16,185,129,0.18)', 'rgba(245,158,11,0.18)', 'rgba(56,189,248,0.18)', 'rgba(244,63,94,0.18)'];
+                const yearsLabels = ['2020', '2021', '2022', '2023', '2024', '2025', '2026'];
+
+                charts.posicoes.data.datasets.forEach((ds, idx) => {
+                    const isSelectedComp = (comp === 'all' || comp === 'supercopas' || compMap[comp] === idx);
+                    ds.borderColor = isSelectedComp ? baseColors[idx] : dimColors[idx];
+                    ds.backgroundColor = isSelectedComp ? baseColors[idx] : dimColors[idx];
+                    ds.borderWidth = isSelectedComp ? (comp !== 'all' ? 4.5 : 3.5) : 1.5;
+                    ds.pointRadius = yearsLabels.map(y => {
+                        if (!isSelectedComp) return 3;
+                        if (ano === 'all') return 6;
+                        return y === ano ? 10 : 4;
+                    });
+                });
+                charts.posicoes.update();
+            }
+
+            if (charts.combo) {
+                const years = Object.keys(seasonData);
+                const mult = rC.j * rP.j * rM.j * rS.j;
+                const multV = rC.v * rP.v * rM.v * rS.v;
+                charts.combo.data.datasets[1].data = years.map(y => Math.max(1, Math.round(seasonData[y].jogos * mult)));
+                charts.combo.data.datasets[2].data = years.map(y => Math.round(seasonData[y].v * multV));
+                charts.combo.data.datasets[2].backgroundColor = years.map(y => (ano === 'all' || y === ano) ? '#10b981' : 'rgba(16, 185, 129, 0.25)');
+                charts.combo.update();
+            }
+
+            if (charts.saldoAnual) {
+                const years = Object.keys(seasonData);
+                const multGP = rC.gp * rP.gp * rM.gp * rS.gp;
+                const multGC = rC.gc * rP.gc * rM.gc * rS.gc;
+                charts.saldoAnual.data.datasets[0].data = years.map(y => Math.round((seasonData[y].gp * multGP) - (seasonData[y].gc * multGC)));
+                charts.saldoAnual.data.datasets[1].data = years.map(y => Math.round(seasonData[y].gp * multGP));
+                charts.saldoAnual.data.datasets[2].data = years.map(y => Math.round(seasonData[y].gc * multGC));
+                charts.saldoAnual.update();
+            }
+
+            if (charts.minutagem) {
+                const baseProMin = [98, 114, 110, 22, 128, 136, 135, 32];
+                const baseConMin = [48, 56, 54, 13, 61, 62, 58, 14];
+                const gpRatio = gp / 775;
+                const gcRatio = gc / 366;
+                charts.minutagem.data.datasets[0].data = baseProMin.map(val => Math.round(val * gpRatio));
+                charts.minutagem.data.datasets[1].data = baseConMin.map(val => Math.round(val * gcRatio));
+                charts.minutagem.data.datasets[0].label = `Gols Marcados (${gp})`;
+                charts.minutagem.data.datasets[1].label = `Gols Sofridos (${gc})`;
+                charts.minutagem.update();
+            }
+
+            renderFinaisTable();
+        }
+
+        function resetAllFilters() {
+            document.getElementById('filterComando').value = 'all';
+            document.getElementById('filterAno').value = 'all';
+            document.getElementById('filterComp').value = 'all';
+            document.getElementById('filterMando').value = 'all';
+            if (document.getElementById('filterCenario')) {
+                document.getElementById('filterCenario').value = 'all';
+            }
+            applyGlobalFilters();
+        }
+
+        function renderFinaisTable() {
+            const statusFilter = document.getElementById('filterFinaisStatus').value;
+            const globalAno = document.getElementById('filterAno') ? document.getElementById('filterAno').value : 'all';
+            const globalComp = document.getElementById('filterComp') ? document.getElementById('filterComp').value : 'all';
+            const tbody = document.getElementById('finaisTableBody');
+            tbody.innerHTML = '';
+
+            const compKeywordMap = {
+                'brasileiro': 'Brasileirão',
+                'libertadores': 'Libertadores',
+                'paulista': 'Paulista',
+                'copadobrasil': 'Copa do Brasil',
+                'supercopas': 'Supercopa|Recopa|Mundial'
+            };
+
+            const filtered = finaisList.filter(item => {
+                const matchStatus = (statusFilter === 'all' || item.status === statusFilter);
+                const matchAno = (globalAno === 'all' || item.ano === globalAno);
+                let matchComp = true;
+                if (globalComp !== 'all' && compKeywordMap[globalComp]) {
+                    const regex = new RegExp(compKeywordMap[globalComp], 'i');
+                    matchComp = regex.test(item.comp);
+                }
+                return matchStatus && matchAno && matchComp;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400">Nenhuma decisão encontrada para a combinação de filtros selecionada.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(item => {
+                const isChamp = item.status === 'Campeão';
+                const badge = isChamp
+                    ? `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40"><i class="fa-solid fa-trophy mr-1"></i>Campeão</span>`
+                    : `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-700/50 text-slate-300 border border-slate-600">Vice-Campeão</span>`;
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-emerald-900/20 transition';
+                tr.innerHTML = `
+                    <td class="py-3 px-3 font-bold text-emerald-300">${item.ano}</td>
+                    <td class="py-3 px-3 font-semibold text-white">${item.comp}</td>
+                    <td class="py-3 px-3 text-slate-300">${item.adv}</td>
+                    <td class="py-3 px-3 text-slate-300">${item.placar}</td>
+                    <td class="py-3 px-3 text-center">${badge}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Modal Handler for Pitch & Penalty Clicks
+        function showPitchModal(category, title, metric, description) {
+            document.getElementById('modalCategory').textContent = 'Análise Tática • ' + category;
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalMetric').textContent = metric;
+            document.getElementById('modalDescription').textContent = description;
+            const modal = document.getElementById('infoModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function showPenaltyModal(title, placement, detail) {
+            document.getElementById('modalCategory').textContent = 'Raio-X de Pênaltis';
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalMetric').textContent = 'Localização: ' + placement;
+            document.getElementById('modalDescription').textContent = detail;
+            const modal = document.getElementById('infoModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closePitchModal() {
+            const modal = document.getElementById('infoModal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }
+
+        // Initialize All Charts
+        function initCharts() {
+            Chart.defaults.color = '#cbd5e1';
+            Chart.defaults.font.family = "'Inter', sans-serif";
+
+            // 1. Championship Positions Chart (1º Lugar at Top)
+            const ctxPos = document.getElementById('chartPosicoesCampeonatos').getContext('2d');
+            charts.posicoes = new Chart(ctxPos, {
+                type: 'line',
+                data: {
+                    labels: ['2020', '2021', '2022', '2023', '2024', '2025', '2026'],
+                    datasets: [
+                        {
+                            label: 'Brasileirão Série A',
+                            data: [7, 3, 1, 1, 2, 2, 2],
+                            borderColor: '#10b981',
+                            backgroundColor: '#10b981',
+                            borderWidth: 3.5,
+                            pointRadius: 6,
+                            tension: 0.25
+                        },
+                        {
+                            label: 'Campeonato Paulista',
+                            data: [null, 2, 1, 1, 1, 2, 1],
+                            borderColor: '#f59e0b',
+                            backgroundColor: '#f59e0b',
+                            borderWidth: 3.5,
+                            pointRadius: 6,
+                            tension: 0.25
+                        },
+                        {
+                            label: 'Copa Libertadores',
+                            data: [1, 1, 3, 3, 12, 2, 1.5],
+                            borderColor: '#38bdf8',
+                            backgroundColor: '#38bdf8',
+                            borderWidth: 3,
+                            pointRadius: 6,
+                            tension: 0.25
+                        },
+                        {
+                            label: 'Copa do Brasil',
+                            data: [1, 16, 12, 6, 12, 12, 6],
+                            borderColor: '#f43f5e',
+                            backgroundColor: '#f43f5e',
+                            borderDash: [6, 4],
+                            borderWidth: 2.5,
+                            pointRadius: 5,
+                            tension: 0.2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            reverse: true,
+                            min: 1,
+                            max: 16.5,
+                            afterBuildTicks: function(axis) {
+                                axis.ticks = [
+                                    { value: 1 }, { value: 2 }, { value: 3 }, { value: 6 },
+                                    { value: 7 }, { value: 12 }, { value: 16 }
+                                ];
+                            },
+                            grid: { color: 'rgba(16, 185, 129, 0.14)' },
+                            ticks: {
+                                callback: function(value) {
+                                    const map = {
+                                        1: '1º Lugar (Campeão 🏆)',
+                                        2: '2º (Vice 🥈)',
+                                        3: '3º Lugar / Semi',
+                                        6: 'Quartas (5º-8º)',
+                                        7: '7º Colocado',
+                                        12: 'Oitavas de Final',
+                                        16: '3ª Fase'
+                                    };
+                                    return map[value] || '';
+                                },
+                                color: function(context) {
+                                    return context.tick && context.tick.value === 1 ? '#fbbf24' : '#cbd5e1';
+                                },
+                                font: { weight: '700', size: 11 }
+                            }
+                        },
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { font: { weight: '700', size: 12 } }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'top', labels: { usePointStyle: true, padding: 18, font: { size: 12, weight: '600' } } }
+                    }
+                }
+            });
+
+            // 2. Doughnut Chart: Resultados
+            const ctxPie = document.getElementById('chartResultadosPie').getContext('2d');
+            charts.pie = new Chart(ctxPie, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Vitórias', 'Empates', 'Derrotas'],
+                    datasets: [{
+                        data: [267, 107, 83],
+                        backgroundColor: ['#10b981', '#64748b', '#f43f5e'],
+                        borderColor: '#06140e',
+                        borderWidth: 3,
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '64%',
+                    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 15 } } }
+                }
+            });
+
+            // 3. Combo Chart: Anual
+            const years = Object.keys(seasonData);
+            const ctxCombo = document.getElementById('chartAnualCombo').getContext('2d');
+            charts.combo = new Chart(ctxCombo, {
+                type: 'bar',
+                data: {
+                    labels: years,
+                    datasets: [
+                        {
+                            type: 'line',
+                            label: 'Aproveitamento (%)',
+                            data: years.map(y => {
+                                const d = seasonData[y];
+                                return (((d.v * 3 + d.e) / (d.jogos * 3)) * 100).toFixed(1);
+                            }),
+                            borderColor: '#f59e0b',
+                            backgroundColor: '#f59e0b',
+                            borderWidth: 3,
+                            yAxisID: 'y1',
+                            tension: 0.3,
+                            pointRadius: 5
+                        },
+                        {
+                            label: 'Jogos Totais',
+                            data: years.map(y => seasonData[y].jogos),
+                            backgroundColor: 'rgba(148, 163, 184, 0.28)',
+                            borderColor: '#94a3b8',
+                            borderWidth: 1,
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'Vitórias',
+                            data: years.map(y => seasonData[y].v),
+                            backgroundColor: '#10b981',
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        y1: { position: 'right', min: 40, max: 85, grid: { drawOnChartArea: false }, ticks: { callback: v => v + '%' } }
+                    }
+                }
+            });
+
+            // 4. Minutage Chart
+            const ctxMin = document.getElementById('chartGolsMinutagem').getContext('2d');
+            charts.minutagem = new Chart(ctxMin, {
+                type: 'bar',
+                data: {
+                    labels: ["0'-15'", "16'-30'", "31'-45'", "45'+ (Acresc. 1ºT)", "46'-60'", "61'-75'", "76'-90'", "90'+ (Acresc. 2ºT)"],
+                    datasets: [
+                        {
+                            label: 'Gols Marcados (775)',
+                            data: [98, 114, 110, 22, 128, 136, 135, 32],
+                            backgroundColor: '#10b981',
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'Gols Sofridos (366)',
+                            data: [48, 56, 54, 13, 61, 62, 58, 14],
+                            backgroundColor: '#f43f5e',
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } } }
+                }
+            });
+
+            // 5. Clássicos
+            const ctxClassicos = document.getElementById('chartClassicos').getContext('2d');
+            charts.classicos = new Chart(ctxClassicos, {
+                type: 'bar',
+                data: {
+                    labels: ['Corinthians (22j)', 'São Paulo (26j)', 'Santos (19j)', 'Flamengo (18j)', 'Atlético-MG (16j)'],
+                    datasets: [
+                        { label: 'Vitórias', data: [10, 10, 14, 5, 7], backgroundColor: '#10b981', borderRadius: 4 },
+                        { label: 'Empates', data: [9, 9, 2, 7, 7], backgroundColor: '#64748b', borderRadius: 4 },
+                        { label: 'Derrotas', data: [3, 7, 3, 6, 2], backgroundColor: '#f43f5e', borderRadius: 4 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } } }
+                }
+            });
+
+            // 6. Disciplina
+            const ctxDisc = document.getElementById('chartDisciplinaAprov').getContext('2d');
+            charts.disciplina = new Chart(ctxDisc, {
+                type: 'bar',
+                data: {
+                    labels: ['Abel Ferreira em Campo (411 j)', 'Auxiliares por Suspensão (46 j)'],
+                    datasets: [{ label: 'Aproveitamento de Pontos (%)', data: [66.5, 64.5], backgroundColor: ['#10b981', '#f59e0b'], borderRadius: 8, barThickness: 55 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 50, max: 75, ticks: { callback: v => v + '%' } } } }
+            });
+
+            // 7. Cartões Anual
+            const ctxCartoes = document.getElementById('chartCartoesAnual').getContext('2d');
+            charts.cartoes = new Chart(ctxCartoes, {
+                type: 'bar',
+                data: {
+                    labels: years,
+                    datasets: [
+                        { label: 'Cartões Amarelos (125)', data: years.map(y => seasonData[y].amarelos), backgroundColor: '#eab308', borderRadius: 4 },
+                        { label: 'Cartões Vermelhos (24)', data: years.map(y => seasonData[y].vermelhos), backgroundColor: '#ef4444', borderRadius: 4 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } } }
+                }
+            });
+
+            // 8. Artilheiros
+            const ctxArt = document.getElementById('chartArtilheiros').getContext('2d');
+            charts.artilheiros = new Chart(ctxArt, {
+                type: 'bar',
+                data: {
+                    labels: ['Raphael Veiga', 'Rony', 'Flaco López', 'Gustavo Gómez', 'Estêvão', 'Breno Lopes', 'Scarpa', 'Endrick'],
+                    datasets: [{ label: 'Gols Marcados na Era Abel', data: [96, 70, 54, 37, 27, 25, 24, 21], backgroundColor: '#10b981', borderRadius: 6 }]
+                },
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, scales: { x: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } } } }
+            });
+
+            // 9. Saldo Anual
+            const ctxSaldo = document.getElementById('chartSaldoAnual').getContext('2d');
+            charts.saldoAnual = new Chart(ctxSaldo, {
+                type: 'bar',
+                data: {
+                    labels: years,
+                    datasets: [
+                        { type: 'line', label: 'Saldo de Gols Anual', data: years.map(y => seasonData[y].gp - seasonData[y].gc), borderColor: '#fbbf24', backgroundColor: '#fbbf24', borderWidth: 3, tension: 0.3 },
+                        { label: 'Gols Pró', data: years.map(y => seasonData[y].gp), backgroundColor: '#10b981', borderRadius: 5 },
+                        { label: 'Gols Sofridos', data: years.map(y => seasonData[y].gc), backgroundColor: '#f43f5e', borderRadius: 5 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } } } }
+            });
+
+            // 10. Ranking Histórico
+            const ctxRank = document.getElementById('chartRankingHistorico').getContext('2d');
+            charts.rankingHistorico = new Chart(ctxRank, {
+                type: 'bar',
+                data: {
+                    labels: ['Oswaldo Brandão', 'V. Luxemburgo', 'Abel Ferreira (Comissão)', 'L. F. Scolari (Felipão)', 'Ventura Cambon'],
+                    datasets: [
+                        { label: 'Jogos Comandados', data: [562, 410, 457, 484, 305], backgroundColor: 'rgba(148, 163, 184, 0.35)', borderRadius: 5 },
+                        { label: 'Vitórias', data: [328, 244, 267, 237, 179], backgroundColor: ['#059669', '#059669', '#fbbf24', '#059669', '#059669'], borderRadius: 5 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } } } }
+            });
+
+            // 11. Mata-Mata
+            const ctxMata = document.getElementById('chartMataMata').getContext('2d');
+            charts.mataMata = new Chart(ctxMata, {
+                type: 'bar',
+                data: {
+                    labels: ['Paulistão', 'Copa Libertadores', 'Copa do Brasil', 'Recopa / Supercopa'],
+                    datasets: [
+                        { label: 'Classificações / Títulos', data: [16, 13, 11, 4], backgroundColor: '#10b981', borderRadius: 5 },
+                        { label: 'Eliminações / Vices', data: [2, 3, 5, 4], backgroundColor: '#f43f5e', borderRadius: 5 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } } } }
+            });
+
+            // 12. Garçons
+            const ctxGarcons = document.getElementById('chartGarcons').getContext('2d');
+            charts.garcons = new Chart(ctxGarcons, {
+                type: 'bar',
+                data: {
+                    labels: ['Raphael Veiga', 'Rony', 'Gustavo Scarpa', 'Dudu', 'Marcos Rocha', 'Piquerez', 'Estêvão', 'Mayke'],
+                    datasets: [
+                        { label: 'Assistências na Era Abel', data: [44, 33, 39, 28, 25, 22, 18, 21], backgroundColor: '#38bdf8', borderRadius: 5 },
+                        { label: 'Gols Marcados', data: [96, 70, 24, 19, 4, 11, 27, 7], backgroundColor: '#10b981', borderRadius: 5 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } } } }
+            });
+        }
+
+        function exportDataCSV() {
+            let csv = "Ano,Jogos,Vitorias,Empates,Derrotas,Gols_Pro,Gols_Contra,Clean_Sheets,Cartoes_Amarelos,Cartoes_Vermelhos\n";
+            Object.entries(seasonData).forEach(([ano, d]) => {
+                csv += `${ano},${d.jogos},${d.v},${d.e},${d.d},${d.gp},${d.gc},${d.cs},${d.amarelos},${d.vermelhos}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'BI_Era_Abel_Ferreira_Palmeiras_2020_2026.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        window.onload = function () {
+            renderFinaisTable();
+            initCharts();
+            applyGlobalFilters();
+        };
+    </script>
+</body>
+</html>
